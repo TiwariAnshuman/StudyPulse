@@ -21,7 +21,6 @@ export async function createSubject({ ownerId, name, color }) {
   const key = createSubjectKey(normalizedName);
 
   try {
-    // Check for an existing subject belonging to this user.
     const existingSubject = await Subject.findOne({
       ownerId,
       key,
@@ -35,7 +34,6 @@ export async function createSubject({ ownerId, name, color }) {
       );
     }
 
-    // ownerId must come from the authenticated server context.
     const subjectData = {
       ownerId,
       name: normalizedName,
@@ -46,11 +44,8 @@ export async function createSubject({ ownerId, name, color }) {
       subjectData.color = color;
     }
 
-    const subject = await Subject.create(subjectData);
-
-    return subject;
+    return await Subject.create(subjectData);
   } catch (error) {
-    // Handles duplicate-key errors caused by concurrent requests too.
     if (error.code === 11000) {
       throw createSubjectError(
         "A subject with this name already exists.",
@@ -63,14 +58,20 @@ export async function createSubject({ ownerId, name, color }) {
   }
 }
 
-export async function listSubjects({ ownerId }) {
-  return Subject.find({
-    ownerId,
-    archivedAt: null,
-  }).sort({ name: 1 });
+export async function listSubjects({
+  ownerId,
+  includeArchived = false,
+}) {
+  const filter = { ownerId };
+
+  // Default: only active subjects.
+  // If includeArchived is true, return active and archived subjects.
+  if (!includeArchived) {
+    filter.archivedAt = null;
+  }
+
+  return Subject.find(filter).sort({ name: 1 });
 }
-
-
 
 export async function updateSubject({
   ownerId,
@@ -78,18 +79,17 @@ export async function updateSubject({
   updates,
 }) {
   try {
-    // Only find a subject owned by the authenticated user.
     const subject = await Subject.findOne({
       _id: subjectId,
       ownerId,
     });
 
-    // Return the same result for missing and other users' subjects.
     if (!subject) {
-      const error = new Error("Subject not found.");
-      error.statusCode = 404;
-      error.code = "SUBJECT_NOT_FOUND";
-      throw error;
+      throw createSubjectError(
+        "Subject not found.",
+        404,
+        "SUBJECT_NOT_FOUND"
+      );
     }
 
     if (updates.name !== undefined) {
@@ -103,12 +103,11 @@ export async function updateSubject({
       }).select("_id");
 
       if (duplicate) {
-        const error = new Error(
-          "A subject with this name already exists."
+        throw createSubjectError(
+          "A subject with this name already exists.",
+          409,
+          "SUBJECT_ALREADY_EXISTS"
         );
-        error.statusCode = 409;
-        error.code = "SUBJECT_ALREADY_EXISTS";
-        throw error;
       }
 
       subject.name = normalizedName;
@@ -119,6 +118,8 @@ export async function updateSubject({
       subject.color = updates.color;
     }
 
+    // archived: true  -> archive the subject
+    // archived: false -> restore the subject
     if (updates.archived !== undefined) {
       subject.archivedAt = updates.archived
         ? new Date()
@@ -128,18 +129,16 @@ export async function updateSubject({
     return await subject.save();
   } catch (error) {
     if (error.code === 11000) {
-      const conflict = new Error(
-        "A subject with this name already exists."
+      throw createSubjectError(
+        "A subject with this name already exists.",
+        409,
+        "SUBJECT_ALREADY_EXISTS"
       );
-      conflict.statusCode = 409;
-      conflict.code = "SUBJECT_ALREADY_EXISTS";
-      throw conflict;
     }
 
     throw error;
   }
 }
-
 
 export async function deleteSubject({ ownerId, subjectId }) {
   const subject = await Subject.findOne({
@@ -148,10 +147,11 @@ export async function deleteSubject({ ownerId, subjectId }) {
   });
 
   if (!subject) {
-    const error = new Error("Subject not found.");
-    error.statusCode = 404;
-    error.code = "SUBJECT_NOT_FOUND";
-    throw error;
+    throw createSubjectError(
+      "Subject not found.",
+      404,
+      "SUBJECT_NOT_FOUND"
+    );
   }
 
   await Subject.deleteOne({

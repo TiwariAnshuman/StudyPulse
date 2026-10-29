@@ -1,4 +1,6 @@
 
+import mongoose from "mongoose";
+
 import {
   createSubject,
   listSubjects,
@@ -10,7 +12,6 @@ import {
   createSubjectSchema,
   updateSubjectSchema,
 } from "./subject.validation.js";
- import mongoose from "mongoose";
 
 function subjectResponse(subject) {
   return {
@@ -68,6 +69,7 @@ export async function listSubjectsController(req, res, next) {
   try {
     const subjects = await listSubjects({
       ownerId: req.auth.userId,
+      includeArchived: req.query.includeArchived === "true",
     });
 
     return res.status(200).json({
@@ -79,8 +81,6 @@ export async function listSubjectsController(req, res, next) {
     return next(error);
   }
 }
-
-
 
 export async function updateSubjectController(req, res, next) {
   const { subjectId } = req.params;
@@ -133,7 +133,6 @@ export async function updateSubjectController(req, res, next) {
     return next(error);
   }
 }
-
 
 export async function deleteSubjectController(req, res, next) {
   const { subjectId } = req.params;
