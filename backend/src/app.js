@@ -7,7 +7,8 @@ import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import subjectRoutes from "./modules/subjects/subject.routes.js";
 import taskRoutes from "./modules/Tasks/task.routes.js";
-
+import studySessionRoutes from "./modules/StudySessions/studySession.routes.js";
+import activeTimerRoutes from "./modules/studyTimer/activeTimer.routes.js";
 
 const app = express();
 
@@ -53,6 +54,8 @@ app.use("/api/v1/health", healthRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/subjects", subjectRoutes);
 app.use("/api/v1/tasks", taskRoutes);
+app.use("/api/v1/sessions", studySessionRoutes);
+app.use("/api/v1/timer", activeTimerRoutes);
 
 
 // Unknown route

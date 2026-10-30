@@ -40,10 +40,10 @@ const refreshLimiter = rateLimit({
   },
 });
 
-router.post("/register", register);
-router.post("/login", login);
-router.post("/refresh", refresh);
-router.post("/logout", logout);
+router.post("/register", authAttemptLimiter, register);
+router.post("/login", authAttemptLimiter, login);
+router.post("/refresh", refreshLimiter, refresh);
+router.post("/logout", requireAuth, logout);
 router.get("/me", requireAuth, getMe);
 
 export default router;

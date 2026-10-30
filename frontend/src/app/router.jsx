@@ -11,6 +11,8 @@ import NotFoundPage from "../pages/NotFoundPage";
 
 import SubjectsPage from "../features/subjects/SubjectsPage";
 import TasksPage from "../features/tasks/TaskPage";
+import SessionsPage from "../features/sessions/SessionsPage";
+import TimerPage from "../features/timer/TimerPage";
 
 export const router = createBrowserRouter([
   {
@@ -25,7 +27,6 @@ export const router = createBrowserRouter([
     path: "/login",
     element: <LoginPage />,
   },
-
   {
     element: <ProtectedRoute />,
     children: [
@@ -41,9 +42,16 @@ export const router = createBrowserRouter([
         path: "/tasks",
         element: <TasksPage />,
       },
+      {
+        path: "/sessions",
+        element: <SessionsPage />,
+      },
+      {
+        path: "/timer",
+        element: <TimerPage />,
+      },
     ],
   },
-
   {
     path: "*",
     element: <NotFoundPage />,
