@@ -6,6 +6,9 @@ import { env } from "./config/env.js";
 import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import subjectRoutes from "./modules/subjects/subject.routes.js";
+import taskRoutes from "./modules/Tasks/task.routes.js";
+
+
 const app = express();
 
 app.disable("x-powered-by");
@@ -49,6 +52,8 @@ app.use(cookieParser());
 app.use("/api/v1/health", healthRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/subjects", subjectRoutes);
+app.use("/api/v1/tasks", taskRoutes);
+
 
 // Unknown route
 app.use((_req, res) => {

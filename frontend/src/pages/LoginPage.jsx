@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import { apiRequest } from "../lib/api";
-import { useAuth } from "../app/AuthContext";
+import { useAuth } from "../app/useAuth";
 import {
   clearAccessToken,
   setAccessToken,

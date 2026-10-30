@@ -34,6 +34,14 @@ function getSubjectsFromResponse(result) {
   return [];
 }
 
+async function fetchSubjects() {
+  const result = await apiRequest(
+    "/subjects?includeArchived=true"
+  );
+
+  return getSubjectsFromResponse(result);
+}
+
 function getSubjectId(subject) {
   return subject.id ?? subject._id;
 }
@@ -56,16 +64,10 @@ export default function SubjectsPage() {
 
   // Fetch active and archived subjects together.
   const loadSubjects = useCallback(async () => {
-    setLoading(true);
-    setPageError("");
-
     try {
-      const result = await apiRequest(
-        "/subjects?includeArchived=true"
-      );
+      const allSubjects = await fetchSubjects();
 
-      const allSubjects = getSubjectsFromResponse(result);
-
+      setPageError("");
       setSubjects(
         allSubjects.filter((subject) => !subject.archivedAt)
       );
@@ -83,8 +85,40 @@ export default function SubjectsPage() {
   }, []);
 
   useEffect(() => {
-    loadSubjects();
-  }, [loadSubjects]);
+    let active = true;
+
+    async function initializeSubjects() {
+      try {
+        const allSubjects = await fetchSubjects();
+
+        if (active) {
+          setPageError("");
+          setSubjects(
+            allSubjects.filter((subject) => !subject.archivedAt)
+          );
+          setArchivedSubjects(
+            allSubjects.filter((subject) => Boolean(subject.archivedAt))
+          );
+        }
+      } catch (error) {
+        if (active) {
+          setPageError(
+            error.message || "Unable to load your subjects."
+          );
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    initializeSubjects();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function openCreateForm() {
     setEditingId(null);
@@ -155,6 +189,7 @@ export default function SubjectsPage() {
       setName("");
       setColor(DEFAULT_COLOR);
 
+      setLoading(true);
       await loadSubjects();
 
       setNotice(
@@ -189,6 +224,7 @@ export default function SubjectsPage() {
         body: JSON.stringify({ archived: true }),
       });
 
+      setLoading(true);
       await loadSubjects();
       setNotice(`${subject.name} has been archived.`);
     } catch (error) {
@@ -210,6 +246,7 @@ export default function SubjectsPage() {
         body: JSON.stringify({ archived: false }),
       });
 
+      setLoading(true);
       await loadSubjects();
       setNotice(`${subject.name} has been restored.`);
     } catch (error) {

@@ -1,13 +1,12 @@
 
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { LoaderCircle } from "lucide-react";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./useAuth";
 
 export default function ProtectedRoute() {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
-  // Wait until session recovery is complete.
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-stone-50 text-stone-700">
@@ -19,7 +18,6 @@ export default function ProtectedRoute() {
     );
   }
 
-  // Redirect unauthenticated users to login.
   if (!isAuthenticated) {
     return (
       <Navigate
@@ -30,6 +28,5 @@ export default function ProtectedRoute() {
     );
   }
 
-  // Allow authenticated users to access the child route.
   return <Outlet />;
 }

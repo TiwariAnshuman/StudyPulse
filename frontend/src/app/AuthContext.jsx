@@ -1,19 +1,16 @@
 
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useState,
 } from "react";
 
+import { AuthContext } from "./AuthContextValue";
 import { apiRequest } from "../lib/api";
 import {
   clearAccessToken,
   setAccessToken,
 } from "../features/auth/authSession";
-
-const AuthContext = createContext(null);
 
 let recoveryPromise = null;
 
@@ -122,14 +119,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider.");
-  }
-
-  return context;
 }
