@@ -13,6 +13,8 @@ import SubjectsPage from "../features/subjects/SubjectsPage";
 import TasksPage from "../features/tasks/TaskPage";
 import SessionsPage from "../features/sessions/SessionsPage";
 import TimerPage from "../features/timer/TimerPage";
+import TestsPage from "../features/tests/TestsPage";
+import TestDetail from "../features/tests/components/TestDetails";
 
 export const router = createBrowserRouter([
   {
@@ -50,6 +52,15 @@ export const router = createBrowserRouter([
         path: "/timer",
         element: <TimerPage />,
       },
+      {
+        path: "/tests",
+        element: <TestsPage />,
+      },
+      {
+        path: "/tests/:testId",
+        element: <TestDetail />,
+      }
+    
     ],
   },
   {

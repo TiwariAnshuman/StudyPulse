@@ -9,7 +9,13 @@ import subjectRoutes from "./modules/subjects/subject.routes.js";
 import taskRoutes from "./modules/Tasks/task.routes.js";
 import studySessionRoutes from "./modules/StudySessions/studySession.routes.js";
 import activeTimerRoutes from "./modules/studyTimer/activeTimer.routes.js";
-
+import testRoutes from "./modules/tests/test.routes.js";
+import userRoutes from "./modules/users/user.routes.js";
+import {
+  analyticsRouter,
+  insightsRouter,
+} from "./modules/analytics/analytics.routes.js";
+import insightsRoutes from "./modules/insights/insights.routes.js";
 const app = express();
 
 app.disable("x-powered-by");
@@ -56,8 +62,12 @@ app.use("/api/v1/subjects", subjectRoutes);
 app.use("/api/v1/tasks", taskRoutes);
 app.use("/api/v1/sessions", studySessionRoutes);
 app.use("/api/v1/timer", activeTimerRoutes);
+app.use("/api/v1/tests", testRoutes);
+app.use("/api/v1/users", userRoutes);
 
-
+app.use("/api/v1/analytics", analyticsRouter);
+app.use("/api/v1/insights", insightsRouter);
+app.use("/api/v1/insights", insightsRoutes);
 // Unknown route
 app.use((_req, res) => {
   return res.status(404).json({
@@ -67,13 +77,25 @@ app.use((_req, res) => {
   });
 });
 
-// Unexpected errors
+// Central error handler
 app.use((error, _req, res, _next) => {
-  console.error("Unhandled application error:", error.message);
+  const statusCode =
+    Number.isInteger(error.statusCode) &&
+    error.statusCode >= 400 &&
+    error.statusCode <= 499
+      ? error.statusCode
+      : 500;
 
-  return res.status(500).json({
+  if (statusCode === 500) {
+    console.error("Unhandled application error:", error);
+  }
+
+  return res.status(statusCode).json({
     success: false,
-    message: "Internal server error",
+    message:
+      statusCode === 500
+        ? "Internal server error"
+        : error.message,
     data: null,
   });
 });

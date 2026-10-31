@@ -3,8 +3,8 @@ import mongoose from "mongoose";
 import ActiveTimer from "./activeTimer.model.js";
 import StudySession from "../StudySessions/studySession.model.js";
 
-import Task from "../../models/task.js";
-import Subject from "../../models/subject.js";
+import Task from "../../models/Task.js";
+import Subject from "../../models/Subject.js";
 import User from "../../models/User.js";
 
 const DEFAULT_TIMEZONE = "Asia/Kolkata";
