@@ -15,7 +15,7 @@ import SessionsPage from "../features/sessions/SessionsPage";
 import TimerPage from "../features/timer/TimerPage";
 import TestsPage from "../features/tests/TestsPage";
 import TestDetail from "../features/tests/components/TestDetails";
-
+import AnalyticsPage from "../features/analytics/AnalyticsPage";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -59,6 +59,10 @@ export const router = createBrowserRouter([
       {
         path: "/tests/:testId",
         element: <TestDetail />,
+      },
+      {
+        path: "/analytics",
+        element: <AnalyticsPage />,
       }
     
     ],
