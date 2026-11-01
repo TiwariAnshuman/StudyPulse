@@ -1,3 +1,4 @@
+
 import { env } from "../../config/env.js";
 import User from "../../models/User.js";
 
@@ -218,7 +219,24 @@ export async function getMe(req, res, next) {
           id: user._id.toString(),
           displayName: user.displayName,
           email: user.emailNormalized,
+
+          // Profile settings
           timezone: user.timezone,
+          examPreset: user.examPreset ?? null,
+
+          // Optional daily study target
+          dailyTargetMinutes: user.dailyTargetMinutes ?? null,
+
+          // Heatmap intensity boundaries
+          heatmapThresholds: {
+            level1MaxMinutes:
+              user.heatmapThresholds.level1MaxMinutes,
+            level2MaxMinutes:
+              user.heatmapThresholds.level2MaxMinutes,
+            level3MaxMinutes:
+              user.heatmapThresholds.level3MaxMinutes,
+          },
+
           createdAt: user.createdAt,
         },
       },

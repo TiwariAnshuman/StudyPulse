@@ -16,6 +16,7 @@ import {
   insightsRouter,
 } from "./modules/analytics/analytics.routes.js";
 import insightsRoutes from "./modules/insights/insights.routes.js";
+import dashboardRoutes from "./modules/dashboard/dashboard.routes.js";
 const app = express();
 
 app.disable("x-powered-by");
@@ -58,6 +59,7 @@ app.use(cookieParser());
 // API routes
 app.use("/api/v1/health", healthRoutes);
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/subjects", subjectRoutes);
 app.use("/api/v1/tasks", taskRoutes);
 app.use("/api/v1/sessions", studySessionRoutes);

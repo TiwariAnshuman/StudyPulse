@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 
 // Validate supported IANA timezone.
@@ -51,6 +52,13 @@ const heatmapThresholdsSchema = z
 
 export const updateUserSettingsSchema = z
   .object({
+    displayName: z
+      .string()
+      .trim()
+      .min(2, "Name must be at least 2 characters.")
+      .max(50, "Name cannot exceed 50 characters.")
+      .optional(),
+
     timezone: z
       .string()
       .trim()
@@ -59,6 +67,12 @@ export const updateUserSettingsSchema = z
       .refine(isValidIanaTimezone, {
         message: "Timezone must be a valid IANA timezone.",
       })
+      .optional(),
+
+    examPreset: z
+      .string()
+      .trim()
+      .min(1, "Exam preset cannot be empty.")
       .optional(),
 
     dailyTargetMinutes: z
@@ -73,7 +87,9 @@ export const updateUserSettingsSchema = z
   .strict()
   .refine(
     (data) =>
+      data.displayName !== undefined ||
       data.timezone !== undefined ||
+      data.examPreset !== undefined ||
       data.dailyTargetMinutes !== undefined ||
       data.heatmapThresholds !== undefined,
     {

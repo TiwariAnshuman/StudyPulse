@@ -1,3 +1,4 @@
+
 import User from "../../models/User.js";
 
 const createServiceError = (
@@ -26,8 +27,16 @@ export const updateUserSettings = async (userId, payload) => {
   }
 
   // Update only the settings explicitly provided.
+  if (payload.displayName !== undefined) {
+    user.displayName = payload.displayName;
+  }
+
   if (payload.timezone !== undefined) {
     user.timezone = payload.timezone;
+  }
+
+  if (payload.examPreset !== undefined) {
+    user.examPreset = payload.examPreset;
   }
 
   if (payload.dailyTargetMinutes !== undefined) {
@@ -38,14 +47,14 @@ export const updateUserSettings = async (userId, payload) => {
     user.heatmapThresholds = payload.heatmapThresholds;
   }
 
-  // Runs User schema and nested threshold validation.
+  // Run Mongoose schema and nested threshold validation.
   await user.save();
 
   return {
     id: user._id.toString(),
     displayName: user.displayName,
     timezone: user.timezone,
-    examPreset: user.examPreset,
+    examPreset: user.examPreset ?? null,
     dailyTargetMinutes: user.dailyTargetMinutes ?? null,
     heatmapThresholds: {
       level1MaxMinutes:
