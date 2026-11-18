@@ -1,13 +1,6 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  ArrowRight,
-  BookOpen,
-  Eye,
-  EyeOff,
-  LoaderCircle,
-} from "lucide-react";
+import { ArrowRight, Eye, EyeOff, LoaderCircle } from "lucide-react";
 
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../app/useAuth";
@@ -15,6 +8,7 @@ import {
   clearAccessToken,
   setAccessToken,
 } from "../features/auth/authSession";
+import Brand from "../components/ui/Brand";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -88,52 +82,35 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-stone-50 px-4 py-10 text-stone-900 sm:px-6">
-      <div className="mx-auto flex min-h-[80vh] w-full max-w-md flex-col justify-center">
-        <Link
-          to="/"
-          className="mb-10 inline-flex w-fit items-center gap-2"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-900 text-white">
-            <BookOpen size={20} />
-          </span>
-
-          <span className="text-lg font-semibold tracking-tight">
-            StudyPulse
-          </span>
+    <main className="min-h-[100dvh] bg-canvas px-4 py-8 text-ink sm:px-6">
+      <div className="mx-auto flex min-h-[80dvh] w-full max-w-md flex-col justify-center">
+        <Link to="/" className="mb-6 inline-flex min-h-11 w-fit items-center rounded-control">
+          <Brand />
         </Link>
 
-        <section className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm sm:p-8">
-          <div className="mb-8">
-            <p className="text-sm font-medium text-emerald-800">
-              WELCOME BACK
-            </p>
+        <section className="card p-6 sm:p-8">
+          <h1 className="text-[25px] font-semibold leading-tight tracking-tight sm:text-[32px]">
+            Sign in to StudyPulse
+          </h1>
 
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-              Sign in to StudyPulse
-            </h1>
-
-            <p className="mt-3 text-sm leading-6 text-stone-600">
-              Continue planning your study sessions and tracking
-              your exam preparation.
-            </p>
-          </div>
+          <p className="mt-3 text-sm leading-6 text-muted">
+            Continue planning your study sessions and tracking your exam
+            preparation.
+          </p>
 
           {error && (
             <div
+              id="login-error"
               role="alert"
-              className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+              className="mt-6 rounded-control border border-danger/30 bg-danger-subtle px-4 py-3 text-sm text-danger"
             >
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
             <div>
-              <label
-                htmlFor="email"
-                className="mb-2 block text-sm font-medium text-stone-700"
-              >
+              <label htmlFor="email" className="field-label">
                 Email address
               </label>
 
@@ -147,15 +124,13 @@ export default function LoginPage() {
                 onChange={handleChange}
                 required
                 disabled={loading}
-                className="w-full rounded-lg border border-stone-300 bg-white px-3.5 py-3 text-sm outline-none transition placeholder:text-stone-400 focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10 disabled:opacity-60"
+                aria-describedby={error ? "login-error" : undefined}
+                className="field"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="mb-2 block text-sm font-medium text-stone-700"
-              >
+              <label htmlFor="password" className="field-label">
                 Password
               </label>
 
@@ -170,7 +145,8 @@ export default function LoginPage() {
                   onChange={handleChange}
                   required
                   disabled={loading}
-                  className="w-full rounded-lg border border-stone-300 bg-white px-3.5 py-3 pr-12 text-sm outline-none transition placeholder:text-stone-400 focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10 disabled:opacity-60"
+                  aria-describedby={error ? "login-error" : undefined}
+                  className="field pr-12"
                 />
 
                 <button
@@ -182,12 +158,12 @@ export default function LoginPage() {
                     showPassword ? "Hide password" : "Show password"
                   }
                   aria-pressed={showPassword}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-stone-500 hover:text-stone-800"
+                  className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-control text-muted hover:text-ink"
                 >
                   {showPassword ? (
-                    <EyeOff size={18} />
+                    <EyeOff size={19} />
                   ) : (
-                    <Eye size={18} />
+                    <Eye size={19} />
                   )}
                 </button>
               </div>
@@ -196,7 +172,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn btn-primary w-full"
             >
               {loading ? (
                 <>
@@ -215,18 +191,18 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-stone-600">
+          <p className="mt-6 text-center text-sm text-muted">
             Don't have an account?{" "}
             <Link
               to="/register"
-              className="font-medium text-emerald-900 underline-offset-4 hover:underline"
+              className="inline-flex min-h-11 items-center px-1 font-medium text-primary underline-offset-4 hover:underline"
             >
               Create account
             </Link>
           </p>
         </section>
 
-        <p className="mt-6 text-center text-xs leading-5 text-stone-500">
+        <p className="mt-6 text-center text-xs leading-5 text-muted">
           Your study records are private to your account.
         </p>
       </div>

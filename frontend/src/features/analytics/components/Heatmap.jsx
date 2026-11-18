@@ -1,22 +1,32 @@
-
-import { useMemo, useRef, useState } from "react";
-import { CalendarDays, CheckCircle2, Clock3 } from "lucide-react";
+import { Fragment, useMemo, useRef, useState } from "react";
+import { CalendarDays, CheckCircle2 } from "lucide-react";
 import { formatDurationFromMinutes } from "../analytics.utils";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+// Intensity ramp (levels 1 to 4) comes from the primary green; see tailwind.config.js.
+// Light cells use dark day numbers and dark cells use white ones.
 const LEVEL_STYLES = {
-  0: "bg-muted border-border",
-  1: "bg-emerald-200 border-emerald-200",
-  2: "bg-emerald-400 border-emerald-400",
-  3: "bg-emerald-600 border-emerald-600",
-  4: "bg-emerald-800 border-emerald-800",
+  0: "border-line bg-tint text-muted",
+  1: "border-heat-1 bg-heat-1 text-ink",
+  2: "border-heat-2 bg-heat-2 text-ink",
+  3: "border-heat-3 bg-heat-3 text-white",
+  4: "border-heat-4 bg-heat-4 text-white",
+};
+
+const SWATCH_STYLES = {
+  0: "border-line bg-tint",
+  1: "border-heat-1 bg-heat-1",
+  2: "border-heat-2 bg-heat-2",
+  3: "border-heat-3 bg-heat-3",
+  4: "border-heat-4 bg-heat-4",
 };
 
 const STATE_STYLES = {
-  future: "bg-muted/40 border-dashed border-border",
-  unavailable: "bg-muted/20 border-dashed border-border",
-  "no-entry": "bg-muted border-border",
+  future: "border-dashed border-line-strong bg-transparent text-muted",
+  unavailable:
+    "border-dashed border-line-strong bg-canvas text-muted [background-image:repeating-linear-gradient(135deg,transparent_0_4px,#DDE2DC_4px_5px)]",
+  "no-entry": "border-line bg-tint text-muted",
 };
 
 function parseLocalDate(dateString) {
@@ -46,15 +56,8 @@ function formatFullDate(dateString) {
   });
 }
 
-function formatMonth(dateString) {
-  const date = parseLocalDate(dateString);
-
-  if (!date) return "";
-
-  return date.toLocaleDateString("en-IN", {
-    month: "short",
-    year: "numeric",
-  });
+function formatMonthShort(date) {
+  return date.toLocaleDateString("en-IN", { month: "short" });
 }
 
 function formatCellState(cell) {
@@ -63,10 +66,10 @@ function formatCellState(cell) {
       return `${cell.durationMinutes ?? 0} minutes recorded`;
 
     case "no-entry":
-      return "No study session recorded";
+      return "No entry";
 
     case "unavailable":
-      return "Study data unavailable";
+      return "Unavailable, before your account was created";
 
     case "future":
       return "Future date";
@@ -84,9 +87,7 @@ function getCellLabel(cell) {
     return `${date}. ${state}.`;
   }
 
-  return `${date}. ${state}. ${
-    cell.sessionCount ?? 0
-  } sessions.`;
+  return `${date}. ${state}. ${cell.sessionCount ?? 0} sessions.`;
 }
 
 function getCellStyle(cell) {
@@ -100,62 +101,38 @@ function getCellStyle(cell) {
 function getThresholdLegend(legend) {
   if (!Array.isArray(legend) || legend.length === 0) {
     return [
-      { label: "No recorded study", style: LEVEL_STYLES[0] },
-      { label: "1–29 min", style: LEVEL_STYLES[1] },
-      { label: "30–89 min", style: LEVEL_STYLES[2] },
-      { label: "90–179 min", style: LEVEL_STYLES[3] },
-      { label: "180+ min", style: LEVEL_STYLES[4] },
+      { label: "1–29 min", level: 1 },
+      { label: "30–89 min", level: 2 },
+      { label: "90–179 min", level: 3 },
+      { label: "180+ min", level: 4 },
     ];
   }
 
-  return legend.map((item, index) => {
-    const level = item.level ?? index;
-
-    return {
-      label:
-        item.label ??
-        item.description ??
-        `Level ${level}`,
-      style: LEVEL_STYLES[level] || LEVEL_STYLES[0],
-    };
-  });
+  return legend
+    .map((item, index) => ({
+      label: item.label ?? item.description ?? `Level ${item.level ?? index}`,
+      level: item.level ?? index,
+    }))
+    .filter((item) => item.level > 0);
 }
 
-function HeatmapCell({ cell, selected, onSelect, cellRef, onKeyDown }) {
+function HeatmapCell({ cell, selected, tabIndex, onSelect, cellRef, onKeyDown }) {
+  const day = parseLocalDate(cell.date)?.getDate();
+
   return (
     <button
       ref={cellRef}
       type="button"
+      tabIndex={tabIndex}
       onClick={() => onSelect(cell)}
       onKeyDown={onKeyDown}
       aria-label={getCellLabel(cell)}
       aria-pressed={selected}
-      title={getCellLabel(cell)}
-      className={`
-        h-7 w-7 sm:h-8 sm:w-8
-        rounded-md border
-        transition-all duration-150
-        hover:ring-2 hover:ring-primary/40
-        focus-visible:outline-none
-        focus-visible:ring-2 focus-visible:ring-primary
-        focus-visible:ring-offset-2
-        ${getCellStyle(cell)}
-        ${selected ? "ring-2 ring-primary ring-offset-2" : ""}
-      `}
+      className={`flex aspect-square w-full items-center justify-center rounded-control border text-xs font-medium transition-colors hover:border-ink ${getCellStyle(
+        cell
+      )} ${selected ? "ring-2 ring-ink ring-offset-2 ring-offset-surface" : ""}`}
     >
-      {cell.state === "recorded" && (
-        <span className="sr-only">
-          Level {cell.level}
-        </span>
-      )}
-
-      {cell.state === "unavailable" && (
-        <span className="sr-only">Unavailable</span>
-      )}
-
-      {cell.state === "future" && (
-        <span className="sr-only">Future</span>
-      )}
+      <span aria-hidden="true">{day}</span>
     </button>
   );
 }
@@ -163,87 +140,71 @@ function HeatmapCell({ cell, selected, onSelect, cellRef, onKeyDown }) {
 function SelectedDayDetails({ cell }) {
   if (!cell) {
     return (
-      <div className="rounded-xl border border-border bg-muted/20 p-4">
-        <p className="text-sm text-muted-foreground">
-          Select a date to view its study details.
+      <div className="rounded-panel bg-canvas p-4">
+        <p className="text-sm text-muted">
+          Select a day to see its study details.
         </p>
       </div>
     );
   }
 
-  const dateLabel = formatFullDate(cell.date);
-
-  let statusMessage = "";
+  let statusMessage = "Study activity recorded.";
 
   if (cell.state === "no-entry") {
-    statusMessage = "No study session was recorded for this date.";
+    statusMessage =
+      "No entry for this date. This does not mean you did not study.";
   } else if (cell.state === "unavailable") {
-    statusMessage = "Study data is unavailable for this date.";
+    statusMessage = "This date is before your account was created.";
   } else if (cell.state === "future") {
     statusMessage = "This date is in the future.";
-  } else {
-    statusMessage = "Study activity recorded.";
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-panel border border-line p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm text-muted-foreground">
-            Selected date
-          </p>
+          <p className="text-xs text-muted">Selected day</p>
 
-          <h3 className="mt-1 font-semibold text-foreground">
-            {dateLabel}
+          <h3 className="mt-1 font-semibold text-ink">
+            {formatFullDate(cell.date)}
           </h3>
         </div>
 
         {cell.state === "recorded" && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
-            <CheckCircle2 size={13} />
+          <span className="inline-flex items-center gap-1 rounded-control bg-primary-subtle px-2 py-1 text-xs font-medium text-primary">
+            <CheckCircle2 size={14} />
             Recorded
           </span>
         )}
       </div>
 
-      <p className="mt-3 text-sm text-muted-foreground">
-        {statusMessage}
-      </p>
+      <p className="mt-3 text-sm text-muted">{statusMessage}</p>
 
       {cell.state === "recorded" && (
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div className="rounded-lg bg-muted/40 p-3">
-            <p className="text-xs text-muted-foreground">
-              Study duration
-            </p>
-
-            <p className="mt-1 font-semibold text-foreground">
+        <dl className="mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-control bg-canvas p-3">
+            <dt className="text-xs text-muted">Study time</dt>
+            <dd className="mt-1 font-semibold text-ink">
               {formatDurationFromMinutes(cell.durationMinutes ?? 0)}
-            </p>
+            </dd>
           </div>
 
-          <div className="rounded-lg bg-muted/40 p-3">
-            <p className="text-xs text-muted-foreground">
-              Sessions
-            </p>
-
-            <p className="mt-1 font-semibold text-foreground">
+          <div className="rounded-control bg-canvas p-3">
+            <dt className="text-xs text-muted">Sessions</dt>
+            <dd className="mt-1 font-semibold text-ink">
               {cell.sessionCount ?? 0}
-            </p>
+            </dd>
           </div>
 
           {typeof cell.goalReached === "boolean" && (
-            <div className="rounded-lg bg-muted/40 p-3">
-              <p className="text-xs text-muted-foreground">
-                Daily goal
-              </p>
-
-              <p className="mt-1 font-semibold text-foreground">
+            <div className="col-span-2 rounded-control bg-canvas p-3">
+              <dt className="text-xs text-muted">Daily target</dt>
+              <dd className="mt-1 font-semibold text-ink">
                 {cell.goalReached ? "Reached" : "Not reached"}
-              </p>
+              </dd>
             </div>
           )}
-        </div>
+        </dl>
       )}
     </div>
   );
@@ -251,39 +212,62 @@ function SelectedDayDetails({ cell }) {
 
 export default function Heatmap({ data }) {
   const [selectedCell, setSelectedCell] = useState(null);
+  const [focusIndex, setFocusIndex] = useState(null);
 
   const cellRefs = useRef([]);
 
-  const cells = Array.isArray(data?.cells) ? data.cells : [];
+  const cells = useMemo(
+    () => (Array.isArray(data?.cells) ? data.cells.filter((c) => c?.date) : []),
+    [data?.cells]
+  );
 
   const legend = useMemo(
     () => getThresholdLegend(data?.legend),
     [data?.legend]
   );
 
-  const calendarCells = useMemo(() => {
+  // Cells are consecutive dates, so rows of seven are built from the first weekday.
+  const weeks = useMemo(() => {
     if (!cells.length) return [];
 
     const firstDate = parseLocalDate(cells[0].date);
+    const leading = firstDate ? getMondayFirstDay(firstDate) : 0;
 
-    if (!firstDate) return cells;
-
-    const leadingEmptyCells = getMondayFirstDay(firstDate);
-
-    return [
-      ...Array.from({ length: leadingEmptyCells }, (_, index) => ({
-        type: "empty",
-        id: `empty-${index}`,
-      })),
-      ...cells.map((cell) => ({
-        ...cell,
-        type: "date",
-      })),
+    const slots = [
+      ...Array.from({ length: leading }, () => null),
+      ...cells.map((cell, index) => ({ cell, index })),
     ];
+
+    const rows = [];
+
+    for (let start = 0; start < slots.length; start += 7) {
+      rows.push(slots.slice(start, start + 7));
+    }
+
+    return rows;
   }, [cells]);
 
-  const handleKeyDown = (event, index) => {
-    const columns = 7;
+  // Only one day is a tab stop; arrow keys move between days (roving tabindex).
+  const selectedIndex = selectedCell
+    ? cells.findIndex((cell) => cell.date === selectedCell.date)
+    : -1;
+
+  let fallbackIndex = cells.length - 1;
+
+  while (fallbackIndex > 0 && cells[fallbackIndex].state === "future") {
+    fallbackIndex -= 1;
+  }
+
+  const tabStopIndex = Math.min(
+    Math.max(
+      focusIndex ?? (selectedIndex >= 0 ? selectedIndex : fallbackIndex),
+      0
+    ),
+    Math.max(cells.length - 1, 0)
+  );
+
+  function handleKeyDown(event, index) {
+    const weekday = getMondayFirstDay(parseLocalDate(cells[index].date));
     let nextIndex = index;
 
     switch (event.key) {
@@ -296,11 +280,19 @@ export default function Heatmap({ data }) {
         break;
 
       case "ArrowDown":
-        nextIndex = index + columns;
+        nextIndex = index + 7;
         break;
 
       case "ArrowUp":
-        nextIndex = index - columns;
+        nextIndex = index - 7;
+        break;
+
+      case "Home":
+        nextIndex = index - weekday;
+        break;
+
+      case "End":
+        nextIndex = index + (6 - weekday);
         break;
 
       default:
@@ -309,162 +301,157 @@ export default function Heatmap({ data }) {
 
     event.preventDefault();
 
-    const nextCell = calendarCells[nextIndex];
+    nextIndex = Math.min(Math.max(nextIndex, 0), cells.length - 1);
 
-    if (nextCell?.type === "date") {
-      cellRefs.current[nextIndex]?.focus();
-    }
-  };
+    setFocusIndex(nextIndex);
+    cellRefs.current[nextIndex]?.focus();
+  }
 
   if (!cells.length) {
     return (
-      <section className="rounded-xl border border-border bg-card p-5">
-        <div className="flex items-center gap-2">
-          <CalendarDays size={19} className="text-muted-foreground" />
+      <div className="card px-4 py-8 text-center">
+        <CalendarDays size={24} className="mx-auto text-muted" />
 
-          <h2 className="font-semibold text-foreground">
-            Study consistency
-          </h2>
-        </div>
+        <p className="mt-3 font-medium text-ink">No calendar data yet</p>
 
-        <div className="mt-6 rounded-lg bg-muted/20 px-4 py-8 text-center">
-          <CalendarDays
-            size={28}
-            className="mx-auto text-muted-foreground"
-          />
-
-          <p className="mt-3 font-medium text-foreground">
-            No heatmap data available
-          </p>
-
-          <p className="mt-1 text-sm text-muted-foreground">
-            Study activity will appear here when calendar data is available.
-          </p>
-        </div>
-      </section>
+        <p className="mt-1 text-sm text-muted">
+          Study activity will appear here once calendar data is available.
+        </p>
+      </div>
     );
   }
 
   return (
-    <section className="rounded-xl border border-border bg-card p-5">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="card p-4 sm:p-5">
+      <div className="lg:grid lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)] lg:gap-8">
+        {/* Calendar: one row per week, Monday first */}
         <div>
-          <div className="flex items-center gap-2">
-            <CalendarDays
-              size={19}
-              className="text-muted-foreground"
-            />
-
-            <h2 className="font-semibold text-foreground">
-              Study consistency
-            </h2>
-          </div>
-
-          <p className="mt-1 text-sm text-muted-foreground">
-            Your recorded study activity across the selected period.
+          <p className="mb-3 text-sm text-muted">
+            {cells.length} {cells.length === 1 ? "day" : "days"}, Monday to
+            Sunday
           </p>
-        </div>
 
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Clock3 size={14} />
-          <span>{cells.length} days</span>
-        </div>
-      </div>
+          <div className="grid grid-cols-[2.25rem_repeat(7,minmax(0,1fr))] gap-1.5 sm:gap-2">
+            <div aria-hidden="true" />
 
-      {/* Calendar */}
-      <div className="mt-6 overflow-x-auto pb-2">
-        <div className="min-w-[310px]">
-          {/* Weekday labels */}
-          <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
             {WEEKDAYS.map((day) => (
               <div
                 key={day}
-                className="pb-2 text-center text-xs text-muted-foreground"
+                aria-hidden="true"
+                className="pb-1 text-center text-xs text-muted"
               >
                 {day}
               </div>
             ))}
-          </div>
 
-          {/* Calendar cells */}
-          <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-            {calendarCells.map((cell, index) => {
-              if (cell.type === "empty") {
-                return (
-                  <div
-                    key={cell.id}
-                    aria-hidden="true"
-                    className="h-7 w-7 sm:h-8 sm:w-8"
-                  />
-                );
-              }
+            {weeks.map((week, weekIndex) => {
+              // Month name on the first row of each new month.
+              const firstSlot = week.find(Boolean);
+              const rowDate = parseLocalDate(firstSlot?.cell.date);
+              const previousSlot =
+                weekIndex > 0 ? weeks[weekIndex - 1].find(Boolean) : null;
+              const previousDate = parseLocalDate(previousSlot?.cell.date);
+
+              const labelDate =
+                rowDate &&
+                (!previousDate || previousDate.getMonth() !== rowDate.getMonth())
+                  ? rowDate
+                  : null;
 
               return (
-                <HeatmapCell
-                  key={cell.date}
-                  cell={cell}
-                  selected={selectedCell?.date === cell.date}
-                  onSelect={setSelectedCell}
-                  cellRef={(element) => {
-                    cellRefs.current[index] = element;
-                  }}
-                  onKeyDown={(event) => handleKeyDown(event, index)}
-                />
+                <Fragment key={weekIndex}>
+                <div
+                  className="flex items-center text-xs font-medium text-muted"
+                >
+                  {labelDate ? formatMonthShort(labelDate) : ""}
+                </div>
+
+                {Array.from({ length: 7 }, (_, column) => {
+                  const slot = week[column];
+
+                  if (!slot) {
+                    return <div key={`${weekIndex}-${column}`} aria-hidden="true" />;
+                  }
+
+                  return (
+                    <HeatmapCell
+                      key={slot.cell.date}
+                      cell={slot.cell}
+                      selected={selectedCell?.date === slot.cell.date}
+                      tabIndex={slot.index === tabStopIndex ? 0 : -1}
+                      onSelect={(cell) => {
+                        setSelectedCell(cell);
+                        setFocusIndex(slot.index);
+                      }}
+                      cellRef={(element) => {
+                        cellRefs.current[slot.index] = element;
+                      }}
+                      onKeyDown={(event) => handleKeyDown(event, slot.index)}
+                    />
+                  );
+                })}
+                </Fragment>
               );
             })}
           </div>
         </div>
-      </div>
 
-      {/* Legend */}
-      <div className="mt-5 border-t border-border pt-4">
-        <p className="mb-3 text-xs font-medium text-muted-foreground">
-          Study duration levels
-        </p>
+        {/* Selected day and legend */}
+        <div className="mt-5 space-y-5 lg:mt-0">
+          <div aria-live="polite">
+            <SelectedDayDetails cell={selectedCell} />
+          </div>
 
-        <div className="flex flex-wrap gap-x-4 gap-y-2">
-          {legend.map((item, index) => (
-            <div
-              key={`${item.label}-${index}`}
-              className="flex items-center gap-2"
-            >
-              <span
-                className={`h-3.5 w-3.5 rounded-sm border ${item.style}`}
-                aria-hidden="true"
-              />
+          <div>
+            <p className="mb-2 text-xs font-medium text-muted">
+              Study time per day
+            </p>
 
-              <span className="text-xs text-muted-foreground">
-                {item.label}
-              </span>
-            </div>
-          ))}
+            <ul className="flex flex-wrap gap-x-4 gap-y-2">
+              {legend.map((item) => (
+                <li key={item.level} className="flex items-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className={`h-4 w-4 rounded-sm border ${SWATCH_STYLES[item.level]}`}
+                  />
+                  <span className="text-xs text-muted">{item.label}</span>
+                </li>
+              ))}
+            </ul>
+
+            <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+              <li className="flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="h-4 w-4 rounded-sm border border-line bg-tint"
+                />
+                <span className="text-xs text-muted">No entry</span>
+              </li>
+
+              <li className="flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="h-4 w-4 rounded-sm border border-dashed border-line-strong bg-canvas [background-image:repeating-linear-gradient(135deg,transparent_0_3px,#DDE2DC_3px_4px)]"
+                />
+                <span className="text-xs text-muted">Unavailable</span>
+              </li>
+
+              <li className="flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="h-4 w-4 rounded-sm border border-dashed border-line-strong"
+                />
+                <span className="text-xs text-muted">Future</span>
+              </li>
+            </ul>
+
+            <p className="mt-3 text-xs text-muted">
+              Numbers in the squares are the day of the month. A square
+              marked No entry does not mean you did not study.
+            </p>
+          </div>
         </div>
-
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
-          {[
-            ["No entry", STATE_STYLES["no-entry"]],
-            ["Unavailable", STATE_STYLES.unavailable],
-            ["Future", STATE_STYLES.future],
-          ].map(([label, style]) => (
-            <div key={label} className="flex items-center gap-2">
-              <span
-                className={`h-3.5 w-3.5 rounded-sm border ${style}`}
-                aria-hidden="true"
-              />
-
-              <span className="text-xs text-muted-foreground">
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
       </div>
-
-      {/* Selected day details */}
-      <div className="mt-5">
-        <SelectedDayDetails cell={selectedCell} />
-      </div>
-    </section>
+    </div>
   );
 }

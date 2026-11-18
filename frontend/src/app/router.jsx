@@ -6,10 +6,11 @@ import ProtectedRoute from "./ProtectedRoute";
 import AppLayout from "../layouts/AppLayout";
 
 // Public pages
-import LandingPage from "../pages/LandingPage";
+import LandingPage from "../features/landing/LandingPage";
 import LoginPage from "../pages/LoginPage";
 import RegistrationPage from "../pages/RegestrationPage";
 import NotFoundPage from "../pages/NotFoundPage";
+import ConnectionCheckPage from "../pages/ConnectionCheckPage";
 
 // Protected application pages
 import DashboardPage from "../pages/DashboardPage";
@@ -39,6 +40,10 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
+  },
+  {
+    path: "/connection-check",
+    element: <ConnectionCheckPage />,
   },
 
   // ==========================================

@@ -1,12 +1,8 @@
 
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
-import {
-  CalendarDays,
-  Clock3,
-  LoaderCircle,
-  X,
-} from "lucide-react";
+import { Link } from "react-router-dom";
+import { LoaderCircle, X } from "lucide-react";
 import { createTask, updateTask } from "./task.api";
 
 // Browser ke local date ko YYYY-MM-DD format mein convert karta hai.
@@ -56,9 +52,9 @@ function getInitialFormData(task = null) {
 }
 
 const inputClass =
-  "mt-1.5 w-full rounded-lg border border-stone-300 bg-white px-3.5 py-2.5 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10";
+  "field";
 
-const labelClass = "text-sm font-medium text-stone-700";
+const labelClass = "field-label";
 
 export default function TaskForm({
   subjects = [],
@@ -194,14 +190,14 @@ export default function TaskForm({
   }
 
   return (
-    <section className="mt-6 rounded-xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
+    <section className="mt-6 rounded-panel border border-line bg-white p-5 sm:p-6">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-stone-900">
+          <h2 className="text-xl font-semibold text-ink">
             {isEditing ? "Edit task" : "Create a new task"}
           </h2>
 
-          <p className="mt-1 text-sm text-stone-500">
+          <p className="mt-1 text-sm text-muted">
             {isEditing
               ? "Update your task details."
               : "Plan what you want to study and when."}
@@ -213,16 +209,16 @@ export default function TaskForm({
           onClick={onCancel}
           disabled={saving}
           aria-label="Close task form"
-          className="rounded-lg p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-900 disabled:opacity-50"
+          className="-mr-2 -mt-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-tint hover:text-ink disabled:opacity-50"
         >
-          <X size={19} />
+          <X size={20} />
         </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label htmlFor="title" className={labelClass}>
-            Task title <span className="text-red-600">*</span>
+            Task title <span className="text-danger">*</span>
           </label>
 
           <input
@@ -242,7 +238,7 @@ export default function TaskForm({
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
             <label htmlFor="subjectId" className={labelClass}>
-              Subject <span className="text-red-600">*</span>
+              Subject <span className="text-danger">*</span>
             </label>
 
             <select
@@ -296,10 +292,6 @@ export default function TaskForm({
             </label>
 
             <div className="relative">
-              <Clock3
-                size={17}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
-              />
 
               <input
                 id="estimateMinutes"
@@ -310,11 +302,11 @@ export default function TaskForm({
                 value={formData.estimateMinutes}
                 onChange={handleChange}
                 placeholder="e.g. 60"
-                className={`${inputClass} pl-9`}
+                className={inputClass}
               />
             </div>
 
-            <p className="mt-1 text-xs text-stone-500">
+            <p className="field-hint">
               Enter duration in minutes.
             </p>
           </div>
@@ -341,14 +333,10 @@ export default function TaskForm({
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
             <label htmlFor="plannedDate" className={labelClass}>
-              Planned date <span className="text-red-600">*</span>
+              Planned date <span className="text-danger">*</span>
             </label>
 
             <div className="relative">
-              <CalendarDays
-                size={17}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
-              />
 
               <input
                 id="plannedDate"
@@ -357,7 +345,7 @@ export default function TaskForm({
                 required
                 value={formData.plannedDate}
                 onChange={handleChange}
-                className={`${inputClass} pl-9`}
+                className={inputClass}
               />
             </div>
           </div>
@@ -368,10 +356,6 @@ export default function TaskForm({
             </label>
 
             <div className="relative">
-              <CalendarDays
-                size={17}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
-              />
 
               <input
                 id="dueDate"
@@ -380,7 +364,7 @@ export default function TaskForm({
                 min={formData.plannedDate}
                 value={formData.dueDate}
                 onChange={handleChange}
-                className={`${inputClass} pl-9`}
+                className={inputClass}
               />
             </div>
           </div>
@@ -420,7 +404,7 @@ export default function TaskForm({
             className={`${inputClass} resize-y`}
           />
 
-          <p className="mt-1 text-right text-xs text-stone-400">
+          <p className="mt-1 text-right text-xs text-muted">
             {formData.notes.length}/1000
           </p>
         </div>
@@ -428,17 +412,26 @@ export default function TaskForm({
         {formError && (
           <p
             role="alert"
-            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
+            className="rounded-control border border-danger/30 bg-danger-subtle px-3 py-2.5 text-sm text-danger"
           >
             {formError}
           </p>
         )}
 
-        <div className="flex flex-wrap gap-3 border-t border-stone-100 pt-5">
+        {subjects.length === 0 && (
+          <p className="rounded-control bg-attention-subtle px-3 py-2.5 text-sm text-attention-ink">
+            You need a subject before you can create a task.{" "}
+            <Link to="/subjects" className="font-semibold underline underline-offset-4">
+              Add a subject
+            </Link>
+          </p>
+        )}
+
+        <div className="flex flex-col-reverse gap-3 border-t border-line pt-5 sm:flex-row sm:justify-end">
           <button
             type="submit"
             disabled={saving || subjects.length === 0}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-emerald-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="btn btn-primary"
           >
             {saving && (
               <LoaderCircle
@@ -460,7 +453,7 @@ export default function TaskForm({
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="min-h-10 rounded-lg border border-stone-300 px-5 py-2.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-50"
+            className="btn btn-secondary"
           >
             Cancel
           </button>

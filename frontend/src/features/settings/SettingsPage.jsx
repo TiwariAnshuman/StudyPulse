@@ -1,19 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  ArrowLeft,
-  Check,
-  LoaderCircle,
-  Settings,
-  UserRound,
-  Clock3,
-  Target,
-  Activity,
-  BookOpen,
-} from "lucide-react";
+import { ArrowRight, Check, LoaderCircle } from "lucide-react";
 
 import { useAuth } from "../../app/useAuth";
+import { PageContainer, PageHeader } from "../../components/ui/Page";
 import { updateSettings } from "./settings.api";
 
 const DEFAULT_THRESHOLDS = {
@@ -22,44 +12,33 @@ const DEFAULT_THRESHOLDS = {
   level3MaxMinutes: 179,
 };
 
-function SettingsSection({ icon: Icon, title, description, children }) {
+function SettingsSection({ title, description, children }) {
   return (
-    <section className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-900">
-          <Icon size={19} />
-        </div>
+    <section className="card p-4 sm:p-6">
+      <h2 className="text-base font-semibold text-ink">{title}</h2>
 
-        <div>
-          <h2 className="font-semibold text-stone-900">{title}</h2>
-          <p className="mt-1 text-sm leading-6 text-stone-500">
-            {description}
-          </p>
-        </div>
-      </div>
+      <p className="mt-1 text-sm leading-6 text-muted">{description}</p>
 
-      <div className="mt-6">{children}</div>
+      <div className="mt-5">{children}</div>
     </section>
   );
 }
 
 function Field({ label, hint, ...props }) {
+  const hintId = hint ? `${props.id}-hint` : undefined;
+
   return (
     <div>
-      <label
-        htmlFor={props.id}
-        className="mb-2 block text-sm font-medium text-stone-700"
-      >
+      <label htmlFor={props.id} className="field-label">
         {label}
       </label>
 
-      <input
-        {...props}
-        className="w-full rounded-lg border border-stone-300 bg-white px-3.5 py-3 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10 disabled:bg-stone-100"
-      />
+      <input {...props} aria-describedby={hintId} className="field" />
 
       {hint && (
-        <p className="mt-1.5 text-xs text-stone-500">{hint}</p>
+        <p id={hintId} className="field-hint">
+          {hint}
+        </p>
       )}
     </div>
   );
@@ -205,71 +184,27 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-stone-50 text-stone-600">
-        <LoaderCircle size={20} className="mr-3 animate-spin" />
+      <div className="flex min-h-[60dvh] items-center justify-center gap-3 text-sm text-muted">
+        <LoaderCircle size={20} className="animate-spin" />
         Loading settings...
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-stone-50 text-stone-900">
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <Link
-          to="/dashboard"
-          className="mb-8 inline-flex items-center gap-2 text-sm text-stone-600 transition hover:text-stone-950"
-        >
-          <ArrowLeft size={16} />
-          Back to dashboard
-        </Link>
+    <PageContainer>
+      <div className="max-w-3xl">
+        <PageHeader
+          title="Settings"
+          description="Manage your profile and choose how StudyPulse tracks your study activity."
+        />
 
-        <header className="mb-8">
-          <p className="text-sm font-medium tracking-wide text-emerald-800">
-            ACCOUNT PREFERENCES
-          </p>
-
-          <div className="mt-2 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-900">
-              <Settings size={22} />
-            </div>
-
-            <h1 className="text-3xl font-semibold tracking-tight">
-              Settings
-            </h1>
-          </div>
-
-          <p className="mt-3 max-w-xl text-sm leading-6 text-stone-600">
-            Manage your profile and customize how StudyPulse
-            tracks your study activity.
-          </p>
-        </header>
-
-        {notice && (
-          <div
-            role="status"
-            className="mb-6 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
-          >
-            <Check size={17} />
-            {notice}
-          </div>
-        )}
-
-        {error && (
-          <div
-            role="alert"
-            className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
-          >
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <SettingsSection
-            icon={UserRound}
             title="Profile"
             description="Your personal account information."
           >
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <Field
                 id="displayName"
                 label="Display name"
@@ -277,6 +212,7 @@ export default function SettingsPage() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Your name"
                 maxLength={50}
+                autoComplete="name"
                 required
               />
 
@@ -292,172 +228,159 @@ export default function SettingsPage() {
           </SettingsSection>
 
           <SettingsSection
-            icon={BookOpen}
-            title="Exam preferences"
-            description="Keep your preparation profile up to date."
+            title="Study preferences"
+            description="Your exam, timezone and optional daily target."
           >
-            <Field
-              id="examPreset"
-              label="Exam preset"
-              value={examPreset}
-              onChange={(e) => setExamPreset(e.target.value)}
-              placeholder="e.g. NEET"
-              maxLength={80}
-              required
-              hint="Enter your exam name or custom exam preset."
-            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                id="examPreset"
+                label="Exam preset"
+                value={examPreset}
+                onChange={(e) => setExamPreset(e.target.value)}
+                placeholder="e.g. NEET"
+                maxLength={80}
+                required
+                hint="Enter your exam name or a custom exam preset."
+              />
 
-            <div className="mt-4">
-              <Link
-                to="/subjects"
-                className="inline-flex items-center gap-2 text-sm font-medium text-emerald-900 underline underline-offset-4 hover:text-emerald-700"
-              >
-                Manage subjects
-                <ArrowLeft className="rotate-180" size={14} />
-              </Link>
+              <Field
+                id="dailyTarget"
+                label="Daily target (minutes)"
+                type="number"
+                inputMode="numeric"
+                min="1"
+                step="1"
+                value={dailyTargetMinutes}
+                onChange={(e) => setDailyTargetMinutes(e.target.value)}
+                placeholder="180"
+                hint="Optional. Leave empty if you don't want a daily target."
+              />
 
-              <p className="mt-1 text-xs text-stone-500">
-                Subjects can be added, edited and archived separately.
-              </p>
+              <div className="sm:col-span-2">
+                <Field
+                  id="timezone"
+                  label="Timezone (IANA name)"
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
+                  placeholder="Asia/Kolkata"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  required
+                  hint="Used to decide your study dates. Example: Asia/Kolkata, Asia/Dubai, Europe/London."
+                />
+              </div>
             </div>
+
+            <Link
+              to="/subjects"
+              className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-primary underline underline-offset-4"
+            >
+              Manage subjects
+              <ArrowRight size={14} />
+            </Link>
           </SettingsSection>
 
           <SettingsSection
-            icon={Clock3}
-            title="Timezone"
-            description="Used to determine your study dates and daily activity."
-          >
-            <Field
-              id="timezone"
-              label="IANA timezone"
-              value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-              placeholder="Asia/Kolkata"
-              required
-              hint="Example: Asia/Kolkata, Asia/Dubai, Europe/London."
-            />
-          </SettingsSection>
-
-          <SettingsSection
-            icon={Target}
-            title="Daily study target"
-            description="An optional target used for goal-related analytics."
-          >
-            <Field
-              id="dailyTarget"
-              label="Daily target (minutes)"
-              type="number"
-              min="1"
-              step="1"
-              value={dailyTargetMinutes}
-              onChange={(e) =>
-                setDailyTargetMinutes(e.target.value)
-              }
-              placeholder="180"
-              hint="Leave empty if you don't want a daily target."
-            />
-          </SettingsSection>
-
-          <SettingsSection
-            icon={Activity}
-            title="Heatmap thresholds"
-            description="Customize the study-minute boundaries used for your activity heatmap."
+            title="Heatmap levels"
+            description="Choose the study-minute limits used for the colours on your consistency calendar."
           >
             <div className="grid gap-4 sm:grid-cols-3">
               <Field
                 id="level1"
-                label="Level 1 · Upper limit"
+                label="Level 1: up to (min)"
                 type="number"
+                inputMode="numeric"
                 min="1"
                 step="1"
                 value={thresholds.level1MaxMinutes}
-                onChange={(e) =>
-                  updateThreshold(
-                    "level1MaxMinutes",
-                    e.target.value
-                  )
-                }
+                onChange={(e) => updateThreshold("level1MaxMinutes", e.target.value)}
                 required
               />
 
               <Field
                 id="level2"
-                label="Level 2 · Upper limit"
+                label="Level 2: up to (min)"
                 type="number"
+                inputMode="numeric"
                 min="2"
                 step="1"
                 value={thresholds.level2MaxMinutes}
-                onChange={(e) =>
-                  updateThreshold(
-                    "level2MaxMinutes",
-                    e.target.value
-                  )
-                }
+                onChange={(e) => updateThreshold("level2MaxMinutes", e.target.value)}
                 required
               />
 
               <Field
                 id="level3"
-                label="Level 3 · Upper limit"
+                label="Level 3: up to (min)"
                 type="number"
+                inputMode="numeric"
                 min="3"
                 step="1"
                 value={thresholds.level3MaxMinutes}
-                onChange={(e) =>
-                  updateThreshold(
-                    "level3MaxMinutes",
-                    e.target.value
-                  )
-                }
+                onChange={(e) => updateThreshold("level3MaxMinutes", e.target.value)}
                 required
               />
             </div>
 
-            <div className="mt-4 rounded-lg bg-stone-50 p-4 text-sm text-stone-600">
-              <p className="font-medium text-stone-800">
-                How your levels work
-              </p>
+            <div className="mt-4 rounded-control bg-canvas p-4 text-sm text-muted">
+              <p className="font-medium text-ink">How your levels work</p>
 
               <ul className="mt-2 space-y-1">
+                <li>Level 1: 1–{thresholds.level1MaxMinutes || "—"} minutes</li>
                 <li>
-                  Level 1: 1–{thresholds.level1MaxMinutes || "—"} minutes
-                </li>
-                <li>
-                  Level 2: Above Level 1 up to{" "}
+                  Level 2: above Level 1 up to{" "}
                   {thresholds.level2MaxMinutes || "—"} minutes
                 </li>
                 <li>
-                  Level 3: Above Level 2 up to{" "}
+                  Level 3: above Level 2 up to{" "}
                   {thresholds.level3MaxMinutes || "—"} minutes
                 </li>
-                <li>
-                  Level 4: Above Level 3 minutes
-                </li>
+                <li>Level 4: above Level 3</li>
               </ul>
             </div>
           </SettingsSection>
 
-          <div className="flex flex-col-reverse justify-between gap-3 border-t border-stone-200 pt-5 sm:flex-row sm:items-center">
-            <p className="text-xs text-stone-500">
-              Changes are saved to your StudyPulse account.
-            </p>
+          {/* Save bar stays in view, with the result right next to the button */}
+          <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 -mx-4 border-t border-line bg-canvas px-4 py-3 sm:mx-0 sm:rounded-panel sm:border sm:bg-surface sm:px-4 lg:bottom-4">
+            {notice && (
+              <p
+                role="status"
+                className="mb-3 flex items-center gap-2 text-sm font-medium text-primary"
+              >
+                <Check size={16} />
+                {notice}
+              </p>
+            )}
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-emerald-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-800 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {saving ? (
-                <LoaderCircle size={17} className="animate-spin" />
-              ) : (
-                <Check size={17} />
-              )}
+            {error && (
+              <p role="alert" className="mb-3 text-sm font-medium text-danger">
+                {error}
+              </p>
+            )}
 
-              {saving ? "Saving changes..." : "Save changes"}
-            </button>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="hidden text-xs text-muted sm:block">
+                Changes are saved to your StudyPulse account.
+              </p>
+
+              <button
+                type="submit"
+                disabled={saving}
+                className="btn btn-primary w-full sm:w-auto"
+              >
+                {saving ? (
+                  <LoaderCircle size={17} className="animate-spin" />
+                ) : (
+                  <Check size={17} />
+                )}
+
+                {saving ? "Saving changes..." : "Save changes"}
+              </button>
+            </div>
           </div>
         </form>
       </div>
-    </main>
+    </PageContainer>
   );
 }

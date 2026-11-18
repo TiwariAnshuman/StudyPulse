@@ -5,7 +5,6 @@ import {
   Activity,
   ArrowRight,
   BookOpen,
-  CalendarDays,
   Check,
   Circle,
   Clock3,
@@ -20,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "../app/useAuth";
+import { PageContainer } from "../components/ui/Page";
 import { getDashboard } from "../features/dashboard/dashboard.api";
 import {
   pauseStudyTimer,
@@ -41,6 +41,13 @@ function formatDuration(totalSeconds = 0) {
   }
 
   return `${minutes}m`;
+}
+
+// Short label for chart bars: 45m, 1.5h
+function formatCompactMinutes(minutes = 0) {
+  if (minutes < 60) return `${Math.round(minutes)}m`;
+
+  return `${Number((minutes / 60).toFixed(1))}h`;
 }
 
 function formatTimerDuration(totalSeconds = 0) {
@@ -115,13 +122,13 @@ function getGreeting(timezone = "Asia/Kolkata") {
 function getStatusStyle(status) {
   switch (status) {
     case "Completed":
-      return "bg-[#E6EEE8] text-[#426B57]";
+      return "bg-primary-subtle text-primary";
 
     case "In progress":
-      return "bg-blue-50 text-blue-700";
+      return "bg-attention-subtle text-attention-ink";
 
     default:
-      return "bg-stone-100 text-stone-600";
+      return "bg-tint text-muted";
   }
 }
 
@@ -133,12 +140,12 @@ function SectionHeading({ title, description, action }) {
   return (
     <div className="mb-5 flex items-center justify-between gap-3">
       <div>
-        <h2 className="text-base font-semibold text-[#202522]">
+        <h2 className="text-base font-semibold text-ink">
           {title}
         </h2>
 
         {description && (
-          <p className="mt-1 text-sm text-[#66716B]">
+          <p className="mt-1 text-sm text-muted">
             {description}
           </p>
         )}
@@ -152,15 +159,15 @@ function SectionHeading({ title, description, action }) {
 function EmptyState({ icon: Icon = Activity, title, description }) {
   return (
     <div className="flex min-h-40 flex-col items-center justify-center px-5 py-8 text-center">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F7F7F3] text-[#66716B]">
+      <div className="flex h-11 w-11 items-center justify-center rounded-panel bg-canvas text-muted">
         <Icon size={20} />
       </div>
 
-      <h3 className="mt-3 text-sm font-semibold text-[#202522]">
+      <h3 className="mt-3 text-sm font-semibold text-ink">
         {title}
       </h3>
 
-      <p className="mt-1 max-w-xs text-xs leading-5 text-[#66716B]">
+      <p className="mt-1 max-w-xs text-xs leading-5 text-muted">
         {description}
       </p>
     </div>
@@ -169,18 +176,18 @@ function EmptyState({ icon: Icon = Activity, title, description }) {
 
 function StatCard({ icon: Icon, label, value, detail }) {
   return (
-    <div className="rounded-xl border border-[#DDE2DC] bg-white p-4">
-      <div className="flex items-center gap-2 text-[#66716B]">
+    <div className="rounded-panel border border-line bg-white p-4">
+      <div className="flex items-center gap-2 text-muted">
         <Icon size={17} />
         <span className="text-xs font-medium">{label}</span>
       </div>
 
-      <p className="mt-3 text-2xl font-semibold tracking-tight text-[#202522]">
+      <p className="mt-3 text-[25px] font-semibold tracking-tight text-ink">
         {value}
       </p>
 
       {detail && (
-        <p className="mt-1 text-xs text-[#66716B]">
+        <p className="mt-1 text-xs text-muted">
           {detail}
         </p>
       )}
@@ -287,8 +294,8 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F7F7F3]">
-        <div className="flex items-center gap-3 text-sm text-[#66716B]">
+      <div className="flex min-h-[60dvh] items-center justify-center">
+        <div className="flex items-center gap-3 text-sm text-muted">
           <LoaderCircle size={19} className="animate-spin" />
           Loading your dashboard...
         </div>
@@ -302,24 +309,24 @@ export default function DashboardPage() {
 
   if (!dashboard) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F7F7F3] px-5">
+      <div className="flex min-h-[60dvh] items-center justify-center px-5">
         <div className="max-w-sm text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-700">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-panel bg-danger-subtle text-danger">
             <Activity size={22} />
           </div>
 
-          <h1 className="mt-4 text-lg font-semibold text-[#202522]">
+          <h1 className="mt-4 text-xl font-semibold text-ink">
             Dashboard couldn't load
           </h1>
 
-          <p className="mt-2 text-sm text-[#66716B]">
+          <p className="mt-2 text-sm text-muted">
             {pageError || "Something went wrong. Please try again."}
           </p>
 
           <button
             type="button"
             onClick={() => loadDashboard({ showLoader: true })}
-            className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#426B57] px-4 text-sm font-medium text-white hover:bg-[#355743]"
+            className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-control bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover"
           >
             <RefreshCw size={16} />
             Try again
@@ -392,22 +399,22 @@ export default function DashboardPage() {
   // -----------------------------------------------
 
   return (
-    <div className="min-h-screen bg-[#F7F7F3] text-[#202522]">
-      <div className="mx-auto max-w-[1440px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
+    <PageContainer>
+      <div>
 
         {/* PAGE HEADER */}
 
         <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-[#426B57]">
+            <p className="text-sm font-medium text-primary">
               {formatDate(dashboard.date, timezone)}
             </p>
 
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-[32px]">
+            <h1 className="mt-1 text-[25px] font-semibold leading-tight tracking-tight sm:text-[32px]">
               {getGreeting(timezone)}, {displayName}
             </h1>
 
-            <p className="mt-2 text-sm text-[#66716B]">
+            <p className="mt-2 text-sm text-muted">
               Here's what's happening with your study today.
             </p>
           </div>
@@ -415,7 +422,7 @@ export default function DashboardPage() {
           <div className="flex flex-wrap gap-2">
             <Link
               to="/tasks"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[#DDE2DC] bg-white px-4 text-sm font-medium text-[#202522] transition hover:bg-[#F1F2ED]"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-line bg-white px-4 text-sm font-medium text-ink transition hover:bg-tint"
             >
               <Plus size={17} />
               Add task
@@ -423,7 +430,7 @@ export default function DashboardPage() {
 
             <Link
               to="/timer"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#426B57] px-4 text-sm font-medium text-white transition hover:bg-[#355743]"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-medium text-white transition hover:bg-primary-hover"
             >
               <Play size={16} />
               Start studying
@@ -436,7 +443,7 @@ export default function DashboardPage() {
         {pageError && (
           <div
             role="alert"
-            className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-control border border-danger/30 bg-danger-subtle px-4 py-3 text-sm text-danger"
           >
             <span>{pageError}</span>
 
@@ -454,25 +461,25 @@ export default function DashboardPage() {
         {/* ONBOARDING CHECKLIST */}
 
         {checklist && !checklist.isComplete && (
-          <section className="mt-8 rounded-xl border border-[#DDE2DC] bg-white p-5 sm:p-6">
+          <section className="mt-8 rounded-panel border border-line bg-white p-5 sm:p-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#426B57]">
+                <p className="text-xs font-semibold text-primary">
                   Getting started
                 </p>
 
-                <h2 className="mt-2 text-lg font-semibold">
+                <h2 className="mt-2 text-xl font-semibold">
                   Start with one small plan.
                 </h2>
 
-                <p className="mt-1 max-w-xl text-sm leading-6 text-[#66716B]">
+                <p className="mt-1 max-w-xl text-sm leading-6 text-muted">
                   Create a task, record a study session, or add a test
                   when you're ready. Your dashboard will fill with
                   your own records.
                 </p>
               </div>
 
-              <span className="text-sm text-[#66716B]">
+              <span className="text-sm text-muted">
                 {checklist.completedCount}/{checklist.totalSteps} completed
               </span>
             </div>
@@ -503,17 +510,17 @@ export default function DashboardPage() {
                 <Link
                   key={item.label}
                   to={item.to}
-                  className="flex min-h-12 items-center gap-3 rounded-lg border border-[#DDE2DC] px-3 py-3 transition hover:bg-[#F7F7F3]"
+                  className="flex min-h-12 items-center gap-3 rounded-control border border-line px-3 py-3 transition hover:bg-canvas"
                 >
                   {item.done ? (
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#E6EEE8] text-[#426B57]">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-primary">
                       <Check size={14} />
                     </span>
                   ) : (
-                    <Circle size={21} className="shrink-0 text-[#A1AAA3]" />
+                    <Circle size={21} className="shrink-0 text-muted" />
                   )}
 
-                  <span className="text-sm font-medium text-[#202522]">
+                  <span className="text-sm font-medium text-ink">
                     {item.label}
                   </span>
                 </Link>
@@ -524,26 +531,26 @@ export default function DashboardPage() {
 
         {/* TOP SUMMARY */}
 
-        <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <div className="rounded-xl border border-[#DDE2DC] bg-white p-5">
+        <section className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-panel border border-line bg-white p-5">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm font-medium text-[#66716B]">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted">
                 <Clock3 size={17} />
                 Study time today
               </div>
 
-              <span className="rounded-md bg-[#E6EEE8] px-2 py-1 text-xs font-medium text-[#426B57]">
+              <span className="rounded-control bg-primary-subtle px-2 py-1 text-xs font-medium text-primary">
                 Recorded
               </span>
             </div>
 
-            <p className="mt-5 text-3xl font-semibold tracking-tight">
+            <p className="mt-5 text-[25px] font-semibold tracking-tight">
               {formatDuration(todayStudy.durationSeconds)}
             </p>
 
             {hasTarget ? (
               <div className="mt-4">
-                <div className="mb-2 flex justify-between text-xs text-[#66716B]">
+                <div className="mb-2 flex justify-between text-xs text-muted">
                   <span>
                     Target: {formatDuration(dailyTarget * 60)}
                   </span>
@@ -552,7 +559,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div
-                  className="h-2 overflow-hidden rounded-full bg-[#EEF0EB]"
+                  className="h-2 overflow-hidden rounded-full bg-tint"
                   role="progressbar"
                   aria-label="Daily study target progress"
                   aria-valuenow={targetProgress}
@@ -560,13 +567,13 @@ export default function DashboardPage() {
                   aria-valuemax={100}
                 >
                   <div
-                    className="h-full rounded-full bg-[#426B57] transition-all"
+                    className="h-full rounded-full bg-primary transition-all"
                     style={{ width: `${targetProgress}%` }}
                   />
                 </div>
               </div>
             ) : (
-              <p className="mt-3 text-xs text-[#66716B]">
+              <p className="mt-3 text-xs text-muted">
                 No daily target configured.
               </p>
             )}
@@ -576,14 +583,7 @@ export default function DashboardPage() {
             icon={Target}
             label="Tasks today"
             value={taskSummary.total ?? 0}
-            detail={`${taskSummary.completed ?? 0} completed · ${taskSummary.inProgress ?? 0} in progress`}
-          />
-
-          <StatCard
-            icon={TrendingUp}
-            label="Pending tasks"
-            value={taskSummary.pending ?? 0}
-            detail="Tasks marked as To do"
+            detail={`${taskSummary.completed ?? 0} completed · ${taskSummary.inProgress ?? 0} in progress · ${taskSummary.pending ?? 0} to do`}
           />
         </section>
 
@@ -591,28 +591,29 @@ export default function DashboardPage() {
 
         <section className="mt-5">
           {timer ? (
-            <div className="rounded-xl border border-[#E7D8B8] bg-[#F6EEDC] p-5 sm:p-6">
+            <div className="rounded-panel border border-attention/40 bg-attention-subtle p-5 sm:p-6">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span
+                      aria-hidden="true"
                       className={`h-2 w-2 rounded-full ${
                         timerIsRunning
-                          ? "animate-pulse bg-[#D5A14A]"
-                          : "bg-[#A77B2E]"
+                          ? "motion-safe:animate-pulse bg-attention"
+                          : "bg-attention-ink"
                       }`}
                     />
 
-                    <span className="text-xs font-semibold uppercase tracking-wide text-[#84652D]">
+                    <span role="status" className="text-sm font-semibold text-attention-ink">
                       {timerIsRunning ? "Timer running" : "Timer paused"}
                     </span>
                   </div>
 
-                  <h2 className="mt-3 text-lg font-semibold text-[#202522]">
+                  <h2 className="mt-3 text-xl font-semibold text-ink">
                     {timer.subjectName || "Study session"}
                   </h2>
 
-                  <p className="mt-1 text-sm text-[#66716B]">
+                  <p className="mt-1 text-sm text-muted">
                     {timer.taskTitle
                       ? `Task: ${timer.taskTitle}`
                       : timer.activityType || "Study session"}
@@ -620,7 +621,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="flex flex-col gap-3 sm:items-end">
-                  <p className="font-mono text-3xl font-semibold tracking-tight text-[#202522]">
+                  <p className="font-mono text-[25px] font-semibold tracking-tight text-ink">
                     {formatTimerDuration(timerElapsed)}
                   </p>
 
@@ -629,7 +630,7 @@ export default function DashboardPage() {
                       type="button"
                       onClick={handleTimerToggle}
                       disabled={isTimerUpdating}
-                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#202522] px-4 text-sm font-medium text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-ink px-4 text-sm font-medium text-white transition hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isTimerUpdating ? (
                         <LoaderCircle size={16} className="animate-spin" />
@@ -644,7 +645,7 @@ export default function DashboardPage() {
 
                     <Link
                       to="/timer"
-                      className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#D7C49D] bg-white/70 px-4 text-sm font-medium text-[#202522] transition hover:bg-white"
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control border border-attention/50 bg-white/70 px-4 text-sm font-medium text-ink transition hover:bg-white"
                     >
                       Finish session
                       <ArrowRight size={15} />
@@ -654,9 +655,9 @@ export default function DashboardPage() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-3 rounded-xl border border-dashed border-[#DDE2DC] bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 rounded-panel border border-dashed border-line bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F7F7F3] text-[#426B57]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-control bg-canvas text-primary">
                   <Timer size={20} />
                 </div>
 
@@ -665,7 +666,7 @@ export default function DashboardPage() {
                     No active study timer
                   </h2>
 
-                  <p className="mt-1 text-xs text-[#66716B]">
+                  <p className="mt-1 text-xs text-muted">
                     Start a session when you're ready to study.
                   </p>
                 </div>
@@ -673,7 +674,7 @@ export default function DashboardPage() {
 
               <Link
                 to="/timer"
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#426B57] px-4 text-sm font-medium text-white hover:bg-[#355743]"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-primary px-4 text-sm font-medium text-white hover:bg-primary-hover"
               >
                 <Play size={15} />
                 Start timer
@@ -688,43 +689,20 @@ export default function DashboardPage() {
 
           {/* TODAY'S TASKS */}
 
-          <div className="rounded-xl border border-[#DDE2DC] bg-white p-5 xl:col-span-7">
+          <div className="rounded-panel border border-line min-w-0 bg-white p-5 xl:col-span-7">
             <SectionHeading
               title="Today's tasks"
               description="Your planned work for today."
               action={
                 <Link
                   to="/tasks"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#426B57] hover:underline"
+                  className="inline-flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap text-sm font-semibold text-primary hover:underline"
                 >
                   View all
                   <ArrowRight size={14} />
                 </Link>
               }
             />
-
-            <div className="mb-5 grid grid-cols-3 gap-2">
-              <div className="rounded-lg bg-[#F7F7F3] p-3">
-                <p className="text-xl font-semibold">
-                  {taskSummary.pending ?? 0}
-                </p>
-                <p className="mt-1 text-xs text-[#66716B]">To do</p>
-              </div>
-
-              <div className="rounded-lg bg-[#F7F7F3] p-3">
-                <p className="text-xl font-semibold">
-                  {taskSummary.inProgress ?? 0}
-                </p>
-                <p className="mt-1 text-xs text-[#66716B]">In progress</p>
-              </div>
-
-              <div className="rounded-lg bg-[#F7F7F3] p-3">
-                <p className="text-xl font-semibold">
-                  {taskSummary.completed ?? 0}
-                </p>
-                <p className="mt-1 text-xs text-[#66716B]">Completed</p>
-              </div>
-            </div>
 
             {todayTasks.length === 0 ? (
               <EmptyState
@@ -733,24 +711,24 @@ export default function DashboardPage() {
                 description="Add a task to give your study day a clear direction."
               />
             ) : (
-              <div className="divide-y divide-[#EEF0EB]">
+              <div className="divide-y divide-tint">
                 {todayTasks.slice(0, 5).map((task) => (
                   <div
                     key={task._id ?? task.id}
                     className="flex items-center justify-between gap-3 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-[#202522]">
+                      <p className="truncate text-sm font-medium text-ink">
                         {task.title}
                       </p>
 
-                      <p className="mt-1 text-xs text-[#66716B]">
+                      <p className="mt-1 text-xs text-muted">
                         {task.subjectId?.name || "No subject"}
                       </p>
                     </div>
 
                     <span
-                      className={`shrink-0 rounded-md px-2 py-1 text-xs font-medium ${getStatusStyle(task.status)}`}
+                      className={`shrink-0 rounded-control px-2 py-1 text-xs font-medium ${getStatusStyle(task.status)}`}
                     >
                       {task.status}
                     </span>
@@ -762,7 +740,7 @@ export default function DashboardPage() {
 
           {/* WEEKLY STUDY TREND */}
 
-          <div className="rounded-xl border border-[#DDE2DC] bg-white p-5 xl:col-span-5">
+          <div className="rounded-panel border border-line min-w-0 bg-white p-5 xl:col-span-5">
             <SectionHeading
               title="Weekly study"
               description="Recorded time over the last 7 days."
@@ -770,7 +748,7 @@ export default function DashboardPage() {
 
             {hasWeeklyData ? (
               <>
-                <div className="flex h-48 items-end justify-between gap-2 border-b border-[#DDE2DC] px-1 pb-2 pt-5">
+                <div aria-hidden="true" className="flex h-48 items-end justify-between gap-1.5 border-b border-line px-1 pb-2 pt-5 sm:gap-2">
                   {weeklyStudy.map((day) => {
                     const minutes = Number(day.durationMinutes) || 0;
                     const barHeight = Math.max(
@@ -783,21 +761,20 @@ export default function DashboardPage() {
                         key={day.date}
                         className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2"
                       >
-                        <span className="text-[10px] text-[#66716B]">
-                          {minutes > 0 ? formatDuration(day.durationSeconds) : ""}
+                        <span className="text-xs text-muted">
+                          {minutes > 0 ? formatCompactMinutes(minutes) : ""}
                         </span>
 
                         <div className="flex h-full w-full items-end justify-center">
                           <div
-                            title={`${day.date}: ${formatDuration(day.durationSeconds)}`}
-                            className={`w-full max-w-8 rounded-t-md ${
-                              minutes > 0 ? "bg-[#426B57]" : "bg-[#EEF0EB]"
+                            className={`w-full max-w-8 rounded-t-control ${
+                              minutes > 0 ? "bg-primary" : "bg-tint"
                             }`}
                             style={{ height: `${barHeight}%` }}
                           />
                         </div>
 
-                        <span className="text-[11px] text-[#66716B]">
+                        <span className="text-xs text-muted">
                           {formatShortDate(day.date, timezone)}
                         </span>
                       </div>
@@ -805,9 +782,28 @@ export default function DashboardPage() {
                   })}
                 </div>
 
-                <p className="mt-4 text-xs leading-5 text-[#66716B]">
+                {/* Text alternative for the bar chart above */}
+                <table className="sr-only">
+                  <caption>Recorded study time for the last 7 days</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Day</th>
+                      <th scope="col">Study time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {weeklyStudy.map((day) => (
+                      <tr key={day.date}>
+                        <td>{formatDate(day.date, timezone)}</td>
+                        <td>{formatDuration(day.durationSeconds)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <p className="mt-4 text-xs leading-5 text-muted">
                   Total recorded this week:{" "}
-                  <strong className="font-semibold text-[#202522]">
+                  <strong className="font-semibold text-ink">
                     {formatDuration(
                       weeklyStudy.reduce(
                         (total, day) =>
@@ -834,14 +830,14 @@ export default function DashboardPage() {
 
           {/* SUBJECT DISTRIBUTION */}
 
-          <div className="rounded-xl border border-[#DDE2DC] bg-white p-5 xl:col-span-7">
+          <div className="rounded-panel border border-line min-w-0 bg-white p-5 xl:col-span-7">
             <SectionHeading
               title="Subject allocation"
               description="How your recorded study time is distributed."
               action={
                 <Link
                   to="/analytics"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#426B57] hover:underline"
+                  className="inline-flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap text-sm font-semibold text-primary hover:underline"
                 >
                   Analytics
                   <ArrowRight size={14} />
@@ -851,7 +847,7 @@ export default function DashboardPage() {
 
             {hasSubjectData ? (
               <div className="space-y-5">
-                {subjectDistribution.map((subject, index) => {
+                {subjectDistribution.map((subject) => {
                   const percentage =
                     subjectTotalSeconds > 0
                       ? (Number(subject.durationSeconds) /
@@ -859,30 +855,22 @@ export default function DashboardPage() {
                         100
                       : 0;
 
-                  const barColors = [
-                    "bg-[#426B57]",
-                    "bg-[#D5A14A]",
-                    "bg-[#7C91A0]",
-                    "bg-[#A58B78]",
-                    "bg-[#879B78]",
-                  ];
-
                   return (
                     <div key={subject.subject}>
                       <div className="mb-2 flex items-center justify-between gap-3">
-                        <span className="truncate text-sm font-medium text-[#202522]">
+                        <span className="truncate text-sm font-medium text-ink">
                           {subject.subject || "Unassigned"}
                         </span>
 
-                        <span className="shrink-0 text-xs text-[#66716B]">
+                        <span className="shrink-0 text-xs text-muted">
                           {formatDuration(subject.durationSeconds)} ·{" "}
                           {Math.round(percentage)}%
                         </span>
                       </div>
 
-                      <div className="h-2 overflow-hidden rounded-full bg-[#EEF0EB]">
+                      <div className="h-2 overflow-hidden rounded-full bg-tint">
                         <div
-                          className={`h-full rounded-full ${barColors[index % barColors.length]}`}
+                          className="h-full rounded-full bg-primary"
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
@@ -901,14 +889,14 @@ export default function DashboardPage() {
 
           {/* LATEST TEST */}
 
-          <div className="rounded-xl border border-[#DDE2DC] bg-white p-5 xl:col-span-5">
+          <div className="rounded-panel border border-line min-w-0 bg-white p-5 xl:col-span-5">
             <SectionHeading
               title="Latest mock test"
               description="Your most recently recorded result."
               action={
                 <Link
                   to="/tests"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#426B57] hover:underline"
+                  className="inline-flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap text-sm font-semibold text-primary hover:underline"
                 >
                   View tests
                   <ArrowRight size={14} />
@@ -920,35 +908,32 @@ export default function DashboardPage() {
               <div>
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-lg font-semibold text-[#202522]">
+                    <p className="text-xl font-semibold text-ink">
                       {latestTest.name}
                     </p>
 
-                    <p className="mt-1 text-xs text-[#66716B]">
+                    <p className="mt-1 text-xs text-muted">
                       {latestTest.examType} ·{" "}
                       {formatDate(latestTest.testDate, timezone)}
                     </p>
                   </div>
 
-                  <span className="rounded-md bg-[#E6EEE8] px-2.5 py-1 text-xs font-semibold text-[#426B57]">
-                    Latest
-                  </span>
                 </div>
 
                 <div className="mt-6 flex items-end justify-between gap-3">
                   <div>
-                    <p className="text-3xl font-semibold tracking-tight">
+                    <p className="text-[25px] font-semibold tracking-tight">
                       {Number(latestTest.percentage).toFixed(1)}%
                     </p>
 
-                    <p className="mt-1 text-xs text-[#66716B]">
+                    <p className="mt-1 text-xs text-muted">
                       {latestTest.marksObtained} / {latestTest.maxMarks} marks
                     </p>
                   </div>
 
                   <Link
                     to={`/tests/${latestTest.id}`}
-                    className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#DDE2DC] px-3 text-xs font-medium text-[#202522] hover:bg-[#F7F7F3]"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-control border border-line px-3 text-xs font-medium text-ink hover:bg-canvas"
                   >
                     View result
                     <ArrowRight size={14} />
@@ -967,14 +952,14 @@ export default function DashboardPage() {
 
         {/* RECENT SESSIONS */}
 
-        <section className="mt-5 rounded-xl border border-[#DDE2DC] bg-white p-5">
+        <section className="mt-5 rounded-panel border border-line bg-white p-5">
           <SectionHeading
             title="Recent study sessions"
             description="Your last recorded study activities."
             action={
               <Link
                 to="/sessions"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-[#426B57] hover:underline"
+                className="inline-flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap text-sm font-semibold text-primary hover:underline"
               >
                 View history
                 <ArrowRight size={14} />
@@ -989,37 +974,70 @@ export default function DashboardPage() {
               description="Your saved study sessions will appear here."
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[520px] text-left">
+            <>
+              {/* Phones: stacked rows so Duration is always visible */}
+              <ul className="divide-y divide-tint sm:hidden">
+                {recentSessions.map((session) => (
+                  <li
+                    key={session._id ?? session.id}
+                    className="flex items-start justify-between gap-3 py-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-ink">
+                        {session.subjectNameSnapshot || "Unassigned"}
+                      </p>
+
+                      <p className="mt-0.5 text-xs text-muted">
+                        {session.activityType} ·{" "}
+                        {formatDate(session.sessionDate, timezone)}
+                      </p>
+
+                      {session.taskTitleSnapshot && (
+                        <p className="mt-0.5 truncate text-xs text-muted">
+                          {session.taskTitleSnapshot}
+                        </p>
+                      )}
+                    </div>
+
+                    <p className="shrink-0 text-sm font-semibold text-ink">
+                      {formatDuration(session.durationSeconds)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Tablet and desktop: table */}
+              <div className="hidden overflow-x-auto sm:block">
+              <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-[#EEF0EB] text-xs text-[#66716B]">
-                    <th className="py-3 pr-4 font-medium">Subject</th>
-                    <th className="py-3 pr-4 font-medium">Activity</th>
-                    <th className="py-3 pr-4 font-medium">Date</th>
-                    <th className="py-3 text-right font-medium">Duration</th>
+                  <tr className="border-b border-tint text-xs text-muted">
+                    <th scope="col" className="py-3 pr-4 font-medium">Subject</th>
+                    <th scope="col" className="py-3 pr-4 font-medium">Activity</th>
+                    <th scope="col" className="py-3 pr-4 font-medium">Date</th>
+                    <th scope="col" className="py-3 text-right font-medium">Duration</th>
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-[#EEF0EB]">
+                <tbody className="divide-y divide-tint">
                   {recentSessions.map((session) => (
                     <tr key={session._id ?? session.id}>
                       <td className="py-4 pr-4">
-                        <p className="text-sm font-medium text-[#202522]">
+                        <p className="text-sm font-medium text-ink">
                           {session.subjectNameSnapshot || "Unassigned"}
                         </p>
 
                         {session.taskTitleSnapshot && (
-                          <p className="mt-1 text-xs text-[#66716B]">
+                          <p className="mt-1 text-xs text-muted">
                             {session.taskTitleSnapshot}
                           </p>
                         )}
                       </td>
 
-                      <td className="py-4 pr-4 text-sm text-[#66716B]">
+                      <td className="py-4 pr-4 text-sm text-muted">
                         {session.activityType}
                       </td>
 
-                      <td className="py-4 pr-4 text-sm text-[#66716B]">
+                      <td className="py-4 pr-4 text-sm text-muted">
                         <span>
                           {formatDate(session.sessionDate, timezone)}
                         </span>
@@ -1029,20 +1047,21 @@ export default function DashboardPage() {
                         </span>
                       </td>
 
-                      <td className="py-4 text-right text-sm font-medium text-[#202522]">
+                      <td className="py-4 text-right text-sm font-medium text-ink">
                         {formatDuration(session.durationSeconds)}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
+              </div>
+            </>
           )}
         </section>
 
         {/* FOOTER */}
 
-        <footer className="mt-8 flex flex-col gap-2 border-t border-[#DDE2DC] pt-5 text-xs text-[#66716B] sm:flex-row sm:items-center sm:justify-between">
+        <footer className="mt-8 flex flex-col gap-2 border-t border-line pt-5 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
           <p>StudyPulse · Plan your study. Track your effort.</p>
 
           <p>
@@ -1050,6 +1069,6 @@ export default function DashboardPage() {
           </p>
         </footer>
       </div>
-    </div>
+    </PageContainer>
   );
 }

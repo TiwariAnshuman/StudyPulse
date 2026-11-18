@@ -2,11 +2,9 @@
 import { useState } from "react";
 import {
   BookOpen,
-  CalendarDays,
   Clock3,
   FileText,
   LoaderCircle,
-  NotebookPen,
   X,
 } from "lucide-react";
 
@@ -252,20 +250,16 @@ export default function SessionForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-6 rounded-xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6"
+      className="space-y-6 rounded-panel border border-line bg-white p-5 sm:p-6"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-sm font-medium text-emerald-800">
-            <NotebookPen size={16} />
-            MANUAL ENTRY
-          </div>
 
-          <h2 className="text-xl font-semibold text-stone-900">
+          <h2 className="text-xl font-semibold text-ink">
             Add study session
           </h2>
 
-          <p className="mt-1 text-sm text-stone-500">
+          <p className="mt-1 text-sm text-muted">
             Record the time you spent studying.
           </p>
         </div>
@@ -276,25 +270,17 @@ export default function SessionForm({
             onClick={onCancel}
             disabled={isSubmitting}
             aria-label="Close form"
-            className="rounded-lg p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-900 disabled:opacity-50"
+            className="-mr-2 -mt-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-tint hover:text-ink disabled:opacity-50"
           >
-            <X size={19} />
+            <X size={20} />
           </button>
         )}
       </div>
 
-      {error && (
-        <div
-          role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-        >
-          {error}
-        </div>
-      )}
 
       {/* Date and time */}
       <section className="space-y-4">
-        <div className="flex items-center gap-2 text-sm font-semibold text-stone-800">
+        <div className="flex items-center gap-2 text-sm font-semibold text-ink">
           <Clock3 size={17} />
           Study duration
         </div>
@@ -302,16 +288,12 @@ export default function SessionForm({
         <div>
           <label
             htmlFor="session-date"
-            className="mb-1.5 block text-sm font-medium text-stone-700"
+            className="mb-1.5 block text-sm font-medium text-ink"
           >
             Study date
           </label>
 
           <div className="relative">
-            <CalendarDays
-              size={17}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400"
-            />
 
             <input
               id="session-date"
@@ -321,7 +303,7 @@ export default function SessionForm({
               value={formData.date}
               onChange={handleChange}
               required
-              className="w-full rounded-lg border border-stone-200 bg-white py-2.5 pl-10 pr-3 text-sm text-stone-800 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10"
+              className="field"
             />
           </div>
         </div>
@@ -330,7 +312,7 @@ export default function SessionForm({
           <div>
             <label
               htmlFor="session-start"
-              className="mb-1.5 block text-sm font-medium text-stone-700"
+              className="mb-1.5 block text-sm font-medium text-ink"
             >
               Start time
             </label>
@@ -342,14 +324,14 @@ export default function SessionForm({
               value={formData.startTime}
               onChange={handleChange}
               required
-              className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10"
+              className="field"
             />
           </div>
 
           <div>
             <label
               htmlFor="session-end"
-              className="mb-1.5 block text-sm font-medium text-stone-700"
+              className="mb-1.5 block text-sm font-medium text-ink"
             >
               End time
             </label>
@@ -361,21 +343,21 @@ export default function SessionForm({
               value={formData.endTime}
               onChange={handleChange}
               required
-              className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10"
+              className="field"
             />
           </div>
         </div>
 
-        <p className="text-xs text-stone-500">
+        <p className="text-xs text-muted">
           Sessions longer than 12 hours and future times cannot be saved.
         </p>
       </section>
 
-      <div className="border-t border-stone-100" />
+      <div className="border-t border-line" />
 
       {/* Subject and task */}
       <section className="space-y-4">
-        <div className="flex items-center gap-2 text-sm font-semibold text-stone-800">
+        <div className="flex items-center gap-2 text-sm font-semibold text-ink">
           <BookOpen size={17} />
           Study details
         </div>
@@ -383,7 +365,7 @@ export default function SessionForm({
         <div>
           <label
             htmlFor="session-subject"
-            className="mb-1.5 block text-sm font-medium text-stone-700"
+            className="mb-1.5 block text-sm font-medium text-ink"
           >
             Subject
           </label>
@@ -394,7 +376,7 @@ export default function SessionForm({
             value={formData.subjectId}
             onChange={handleChange}
             required={!formData.taskId}
-            className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10"
+            className="field"
           >
             <option value="">Select a subject</option>
 
@@ -409,8 +391,8 @@ export default function SessionForm({
           </select>
 
           {validSubjects.length === 0 && (
-            <p className="mt-1.5 text-xs text-amber-700">
-              No valid subjects found. Check your subjects API response.
+            <p className="mt-1.5 text-xs text-attention-ink">
+              No active subjects found. Add a subject first, then come back to record a session.
             </p>
           )}
         </div>
@@ -418,10 +400,10 @@ export default function SessionForm({
         <div>
           <label
             htmlFor="session-task"
-            className="mb-1.5 block text-sm font-medium text-stone-700"
+            className="mb-1.5 block text-sm font-medium text-ink"
           >
             Link a task
-            <span className="ml-1 font-normal text-stone-400">
+            <span className="ml-1 font-normal text-muted">
               (Optional)
             </span>
           </label>
@@ -431,7 +413,7 @@ export default function SessionForm({
             name="taskId"
             value={formData.taskId}
             onChange={handleChange}
-            className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10"
+            className="field"
           >
             <option value="">No linked task</option>
 
@@ -445,7 +427,7 @@ export default function SessionForm({
             ))}
           </select>
 
-          <p className="mt-1.5 text-xs text-stone-500">
+          <p className="mt-1.5 text-xs text-muted">
             If you link a task, its subject can be used automatically.
           </p>
         </div>
@@ -453,7 +435,7 @@ export default function SessionForm({
         <div>
           <label
             htmlFor="session-activity"
-            className="mb-1.5 block text-sm font-medium text-stone-700"
+            className="mb-1.5 block text-sm font-medium text-ink"
           >
             Activity type
           </label>
@@ -464,7 +446,7 @@ export default function SessionForm({
             value={formData.activityType}
             onChange={handleChange}
             required
-            className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 outline-none transition focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10"
+            className="field"
           >
             {ACTIVITY_TYPES.map((activity) => (
               <option key={activity} value={activity}>
@@ -475,14 +457,14 @@ export default function SessionForm({
         </div>
       </section>
 
-      <div className="border-t border-stone-100" />
+      <div className="border-t border-line" />
 
       {/* Optional information */}
       <section className="space-y-4">
-        <div className="flex items-center gap-2 text-sm font-semibold text-stone-800">
+        <div className="flex items-center gap-2 text-sm font-semibold text-ink">
           <FileText size={17} />
           Additional details
-          <span className="font-normal text-stone-400">
+          <span className="font-normal text-muted">
             (Optional)
           </span>
         </div>
@@ -490,7 +472,7 @@ export default function SessionForm({
         <div>
           <label
             htmlFor="session-topic"
-            className="mb-1.5 block text-sm font-medium text-stone-700"
+            className="mb-1.5 block text-sm font-medium text-ink"
           >
             Topic
           </label>
@@ -503,14 +485,14 @@ export default function SessionForm({
             onChange={handleChange}
             maxLength={100}
             placeholder="e.g. Laws of Motion"
-            className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10"
+            className="field"
           />
         </div>
 
         <div>
           <label
             htmlFor="session-notes"
-            className="mb-1.5 block text-sm font-medium text-stone-700"
+            className="mb-1.5 block text-sm font-medium text-ink"
           >
             Notes
           </label>
@@ -523,18 +505,27 @@ export default function SessionForm({
             maxLength={1000}
             rows={3}
             placeholder="What did you study or understand today?"
-            className="w-full resize-y rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-800 focus:ring-2 focus:ring-emerald-800/10"
+            className="field resize-y py-2.5"
           />
         </div>
       </section>
 
-      <div className="flex flex-col-reverse gap-3 border-t border-stone-100 pt-5 sm:flex-row sm:justify-end">
+      {error && (
+        <div
+          role="alert"
+          className="rounded-control border border-danger/30 bg-danger-subtle px-4 py-3 text-sm text-danger"
+        >
+          {error}
+        </div>
+      )}
+
+      <div className="flex flex-col-reverse gap-3 border-t border-line pt-5 sm:flex-row sm:justify-end">
         {onCancel && (
           <button
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="rounded-lg border border-stone-200 px-5 py-2.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-50"
+            className="rounded-control border border-line px-5 py-2.5 text-sm font-medium text-ink transition hover:bg-canvas disabled:opacity-50"
           >
             Cancel
           </button>
@@ -543,7 +534,7 @@ export default function SessionForm({
         <button
           type="submit"
           disabled={isSubmitting || (validSubjects.length === 0 && validTasks.length === 0)}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+          className="btn btn-primary"
         >
           {isSubmitting && (
             <LoaderCircle size={17} className="animate-spin" />

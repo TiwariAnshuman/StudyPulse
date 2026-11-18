@@ -1,62 +1,55 @@
-
 import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  MoveUpRight,
-  CheckCircle2,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
+
+import Reveal from "./Reveal";
 
 export default function FinalCTA() {
   return (
     <section
-      className="final-cta-section"
-      aria-labelledby="final-cta-heading"
+      id="start"
+      aria-labelledby="cta-heading"
+      className="mx-auto w-full max-w-[1200px] px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8"
     >
-      <div className="landing-container">
-        <div className="final-cta-content">
+      <Reveal>
+        <div className="relative overflow-hidden rounded-panel bg-primary px-6 py-14 text-center sm:px-12 sm:py-20">
+          {/* Quiet texture, hidden from assistive technology */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 [background-image:repeating-linear-gradient(90deg,rgba(255,255,255,0.07)_0,rgba(255,255,255,0.07)_1px,transparent_1px,transparent_48px)] [mask-image:linear-gradient(to_bottom,black,transparent)]"
+          />
 
-          <span className="final-cta-eyebrow">
-            YOUR PREPARATION, YOUR RECORD
-          </span>
-
-          <h2
-            id="final-cta-heading"
-            className="final-cta-heading"
-          >
-            Make your preparation
-            <span> easier to understand.</span>
-          </h2>
-
-          <p className="final-cta-description">
-            Start keeping a clear record of what you plan,
-            what you study and how you perform.
-            Bring your preparation into one place with StudyPulse.
-          </p>
-
-          <div className="final-cta-actions">
-            <Link
-              to="/register"
-              className="final-cta-primary-button"
+          <div className="relative">
+            <h2
+              id="cta-heading"
+              className="mx-auto max-w-2xl text-[32px] font-semibold leading-tight tracking-tight text-white sm:text-[44px]"
             >
-              Get started
-              <ArrowRight size={18} aria-hidden="true" />
-            </Link>
+              Make your preparation easier to understand.
+            </h2>
 
-            <span className="final-cta-supporting-text">
-              <CheckCircle2 size={16} aria-hidden="true" />
-              Your personal study workspace
-            </span>
+            <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-white/85 sm:text-lg">
+              Bring your plans, study sessions and mock-test performance
+              together with StudyPulse.
+            </p>
+
+            <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+              <Link
+                to="/register"
+                className="btn min-h-12 bg-white px-6 text-base text-primary hover:bg-primary-subtle"
+              >
+                Start Your Journey
+                <ArrowRight size={18} />
+              </Link>
+
+              <Link
+                to="/login"
+                className="btn min-h-12 border border-white/50 px-6 text-base text-white hover:bg-white/10"
+              >
+                Log in
+              </Link>
+            </div>
           </div>
-
         </div>
-
-        <div className="final-cta-decoration" aria-hidden="true">
-          <div className="final-cta-decoration-circle">
-            <MoveUpRight size={30} />
-          </div>
-        </div>
-
-      </div>
+      </Reveal>
     </section>
   );
 }

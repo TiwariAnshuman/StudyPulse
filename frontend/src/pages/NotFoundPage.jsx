@@ -1,22 +1,28 @@
 import { Link } from "react-router-dom";
+import Brand from "../components/ui/Brand";
 
 export default function NotFoundPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
-      <h1 className="text-3xl font-semibold text-stone-900">
+    <main className="flex min-h-[100dvh] flex-col items-center justify-center bg-canvas px-6 text-center text-ink">
+      <Brand className="mb-10" />
+
+      <h1 className="text-[25px] font-semibold tracking-tight sm:text-[32px]">
         Page not found
       </h1>
 
-      <p className="mt-3 text-stone-600">
-        The page you requested does not exist.
+      <p className="mt-3 max-w-sm text-sm leading-6 text-muted">
+        The page you asked for does not exist or has moved.
       </p>
 
-      <Link
-        to="/"
-        className="mt-6 rounded-lg bg-emerald-800 px-5 py-3 text-sm font-medium text-white hover:bg-emerald-900"
-      >
-        Go home
-      </Link>
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
+        <Link to="/dashboard" className="btn btn-primary">
+          Go to dashboard
+        </Link>
+
+        <Link to="/" className="btn btn-secondary">
+          Go home
+        </Link>
+      </div>
     </main>
   );
 }

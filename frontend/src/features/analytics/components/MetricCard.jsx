@@ -1,99 +1,43 @@
+import { useId, useState } from "react";
+import { ChevronDown } from "lucide-react";
 
-import { useState, createElement, isValidElement } from "react";
-import { Info, ChevronDown } from "lucide-react";
-
-function MetricCard({
-  title,
-  value,
-  description,
-  calculation,
-  icon,
-  className = "",
-}) {
+// One number with its name, a short description and a formula explanation.
+// "How is this calculated?" is required by the product spec (FR-ANL-06).
+function MetricCard({ title, value, description, calculation, className = "" }) {
   const [showCalculation, setShowCalculation] = useState(false);
+  const panelId = useId();
 
-  const hasValue =
-    value !== null &&
-    value !== undefined &&
-    value !== "";
-
-  // Supports both JSX elements and component references.
-  const iconElement = icon
-    ? isValidElement(icon)
-      ? icon
-      : createElement(icon, {
-          size: 18,
-          strokeWidth: 1.8,
-        })
-    : null;
-
-  const toggleCalculation = () => {
-    setShowCalculation((previous) => !previous);
-  };
+  const hasValue = value !== null && value !== undefined && value !== "";
 
   return (
-    <article
-      className={`rounded-xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-muted-foreground/30 ${className}`}
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
-          {iconElement && (
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              {iconElement}
-            </div>
-          )}
+    <article className={`card flex flex-col p-4 ${className}`}>
+      <h3 className="text-sm font-medium leading-5 text-muted">{title}</h3>
 
-          <h3 className="text-sm font-medium text-muted-foreground">
-            {title}
-          </h3>
-        </div>
+      <p
+        className={`mt-2 text-[25px] font-semibold leading-tight tracking-tight ${
+          hasValue ? "text-ink" : "text-muted"
+        }`}
+      >
+        {hasValue ? value : "—"}
+      </p>
 
-        {calculation && (
-          <button
-            type="button"
-            onClick={toggleCalculation}
-            aria-expanded={showCalculation}
-            aria-label={`How is ${title} calculated?`}
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Info size={17} />
-          </button>
-        )}
-      </div>
+      {description && (
+        <p className="mt-1.5 text-xs leading-5 text-muted">{description}</p>
+      )}
 
-      {/* Metric value */}
-      <div className="mt-5">
-        <p
-          className={`text-3xl font-semibold tracking-tight ${
-            hasValue
-              ? "text-foreground"
-              : "text-muted-foreground"
-          }`}
-        >
-          {hasValue ? value : "—"}
-        </p>
-
-        {description && (
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            {description}
-          </p>
-        )}
-      </div>
-
-      {/* Calculation explanation */}
       {calculation && (
-        <div className="mt-5 border-t border-border pt-3">
+        <div className="mt-auto pt-2">
           <button
             type="button"
-            onClick={toggleCalculation}
+            onClick={() => setShowCalculation((previous) => !previous)}
             aria-expanded={showCalculation}
-            className="flex w-full items-center justify-between gap-2 text-left text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+            aria-controls={panelId}
+            className="-mx-1 flex min-h-11 w-[calc(100%+0.5rem)] items-center justify-between gap-2 rounded-control px-1 text-left text-xs font-medium text-primary hover:bg-primary-subtle"
           >
             <span>How is this calculated?</span>
 
             <ChevronDown
-              size={15}
+              size={16}
               className={`shrink-0 transition-transform duration-200 ${
                 showCalculation ? "rotate-180" : ""
               }`}
@@ -101,7 +45,10 @@ function MetricCard({
           </button>
 
           {showCalculation && (
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            <p
+              id={panelId}
+              className="mt-1 rounded-control bg-canvas p-3 text-sm leading-5 text-ink"
+            >
               {calculation}
             </p>
           )}

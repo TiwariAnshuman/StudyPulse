@@ -47,15 +47,15 @@ function MetadataItem({ icon: Icon, label, value }) {
     <div className="flex items-start gap-2">
       <Icon
         size={15}
-        className="mt-0.5 shrink-0 text-muted-foreground"
+        className="mt-0.5 shrink-0 text-muted"
       />
 
       <div className="min-w-0">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted">
           {label}
         </p>
 
-        <p className="mt-0.5 break-words text-sm font-medium text-foreground">
+        <p className="mt-0.5 break-words text-sm font-medium text-ink">
           {formatValue(value)}
         </p>
       </div>
@@ -78,49 +78,49 @@ function EvidenceSection({ evidence }) {
   }
 
   return (
-    <div className="border-t border-border pt-3">
+    <div className="border-t border-line pt-3">
       <button
         type="button"
         onClick={() => setExpanded((current) => !current)}
         aria-expanded={expanded}
-        className="flex w-full items-center justify-between gap-3 text-left"
+        className="flex min-h-11 w-full items-center justify-between gap-3 text-left"
       >
-        <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+        <span className="flex items-center gap-2 text-sm font-medium text-ink">
           <BarChart3
             size={16}
-            className="text-muted-foreground"
+            className="text-muted"
           />
           Supporting evidence
         </span>
 
         {expanded ? (
-          <ChevronUp size={17} className="text-muted-foreground" />
+          <ChevronUp size={17} className="text-muted" />
         ) : (
-          <ChevronDown size={17} className="text-muted-foreground" />
+          <ChevronDown size={17} className="text-muted" />
         )}
       </button>
 
       {expanded && (
-        <div className="mt-3 rounded-lg bg-muted/30 p-3">
+        <div className="mt-3 rounded-control bg-canvas p-3">
           {typeof evidence === "object" &&
           !Array.isArray(evidence) ? (
             <div className="space-y-3">
               {Object.entries(evidence).map(([key, value]) => (
                 <div key={key}>
-                  <p className="text-xs font-medium text-muted-foreground">
+                  <p className="text-xs font-medium text-muted">
                     {key
                       .replace(/([A-Z])/g, " $1")
                       .replace(/^./, (char) => char.toUpperCase())}
                   </p>
 
-                  <p className="mt-1 break-words text-sm text-foreground">
+                  <p className="mt-1 break-words text-sm text-ink">
                     {formatValue(value)}
                   </p>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="whitespace-pre-wrap break-words text-sm text-foreground">
+            <p className="whitespace-pre-wrap break-words text-sm text-ink">
               {formatValue(evidence)}
             </p>
           )}
@@ -132,29 +132,23 @@ function EvidenceSection({ evidence }) {
 
 function InsightCard({ insight }) {
   return (
-    <article className="rounded-xl border border-border bg-card p-4 sm:p-5">
+    <article className="rounded-panel border border-line bg-surface p-4 sm:p-5">
       {/* Insight heading */}
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-primary-subtle text-primary">
           <Lightbulb size={18} />
         </div>
 
         <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-foreground">
+          <h3 className="font-semibold text-ink">
             {insight.title || "Study observation"}
           </h3>
-
-          {insight.ruleId && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              Rule: {insight.ruleId}
-            </p>
-          )}
         </div>
       </div>
 
       {/* Observation */}
       {insight.observation && (
-        <p className="mt-4 text-sm leading-6 text-foreground">
+        <p className="mt-4 text-sm leading-6 text-ink">
           {insight.observation}
         </p>
       )}
@@ -181,18 +175,18 @@ function InsightCard({ insight }) {
 
       {/* Caveat */}
       {insight.caveat && (
-        <div className="mt-4 flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
+        <div className="mt-4 flex items-start gap-2 rounded-control border border-line bg-canvas p-3">
           <Info
             size={16}
-            className="mt-0.5 shrink-0 text-muted-foreground"
+            className="mt-0.5 shrink-0 text-muted"
           />
 
           <div>
-            <p className="text-xs font-semibold text-foreground">
+            <p className="text-xs font-semibold text-ink">
               Important context
             </p>
 
-            <p className="mt-1 text-sm leading-5 text-muted-foreground">
+            <p className="mt-1 text-sm leading-5 text-muted">
               {insight.caveat}
             </p>
           </div>
@@ -209,48 +203,21 @@ export default function Insights({ data }) {
 
   return (
     <section className="space-y-4">
-      {/* Section heading */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <Lightbulb
-              size={19}
-              className="text-muted-foreground"
-            />
-
-            <h2 className="font-semibold text-foreground">
-              Study insights
-            </h2>
-          </div>
-
-          <p className="mt-1 text-sm text-muted-foreground">
-            Observations based on your recorded study data.
-          </p>
-        </div>
-
-        {insights.length > 0 && (
-          <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-            {insights.length}{" "}
-            {insights.length === 1 ? "insight" : "insights"}
-          </span>
-        )}
-      </div>
-
       {/* Empty state */}
       {insights.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card px-5 py-9 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-muted">
+        <div className="rounded-panel border border-line bg-surface px-5 py-9 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-panel bg-tint">
             <Lightbulb
               size={23}
-              className="text-muted-foreground"
+              className="text-muted"
             />
           </div>
 
-          <h3 className="mt-4 font-semibold text-foreground">
+          <h3 className="mt-4 font-semibold text-ink">
             Not enough data for insights yet
           </h3>
 
-          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
             Keep recording your study sessions and test results.
             Once enough data is available, StudyPulse will show
             evidence-based observations here.
@@ -268,7 +235,7 @@ export default function Insights({ data }) {
       )}
 
       {/* Transparency note */}
-      <p className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
+      <p className="flex items-start gap-2 text-xs leading-5 text-muted">
         <Info size={14} className="mt-0.5 shrink-0" />
 
         Insights describe patterns in recorded data. They do not

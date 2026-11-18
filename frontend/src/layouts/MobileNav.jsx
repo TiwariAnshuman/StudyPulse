@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -10,7 +10,6 @@ import {
   History,
   ClipboardList,
   Settings,
-  X,
 } from "lucide-react";
 
 const mainLinks = [
@@ -27,84 +26,140 @@ const moreLinks = [
   { label: "Settings", path: "/settings", icon: Settings },
 ];
 
+const tabClasses = (active) =>
+  `relative flex min-h-16 flex-col items-center justify-center gap-1 text-xs transition-colors ${
+    active ? "font-semibold text-primary" : "font-medium text-muted"
+  }`;
+
+function ActiveBar() {
+  return (
+    <span
+      aria-hidden="true"
+      className="absolute inset-x-6 top-0 h-0.5 rounded-b bg-primary"
+    />
+  );
+}
+
 export default function MobileNav() {
-  const [moreOpen, setMoreOpen] = useState(false);
+  const { pathname } = useLocation();
+
+  // The sheet is open only on the page where it was opened, so any
+  // navigation (tap, back button) closes it without extra effects.
+  const [openOnPath, setOpenOnPath] = useState(null);
+  const moreOpen = openOnPath === pathname;
+
+  const moreButtonRef = useRef(null);
+  const firstMoreLinkRef = useRef(null);
+
+  const moreActive = moreLinks.some(
+    (item) => pathname === item.path || pathname.startsWith(`${item.path}/`)
+  );
+
+  function closeMore() {
+    setOpenOnPath(null);
+  }
+
+  // Escape closes the sheet; focus moves in when it opens.
+  useEffect(() => {
+    if (!moreOpen) return undefined;
+
+    firstMoreLinkRef.current?.focus();
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setOpenOnPath(null);
+        moreButtonRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [moreOpen]);
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#DDE2DC] bg-white md:hidden">
+    <>
+      {/* Tapping outside the sheet closes it */}
       {moreOpen && (
-        <div className="absolute bottom-full right-3 mb-3 w-52 rounded-lg border border-[#DDE2DC] bg-white p-2 shadow-lg">
-          <div className="flex items-center justify-between px-2 py-2">
-            <span className="text-sm font-semibold text-[#202522]">
+        <div
+          aria-hidden="true"
+          onClick={closeMore}
+          className="fixed inset-0 z-40 bg-ink/30 lg:hidden"
+        />
+      )}
+
+      <nav
+        aria-label="Main"
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
+      >
+        {moreOpen && (
+          <div
+            id="more-pages"
+            className="animate-sheet-in absolute inset-x-0 bottom-full rounded-t-panel border-t border-line bg-surface px-2 pb-2 pt-1 shadow-lg"
+          >
+            <p className="px-4 pb-1 pt-3 text-xs font-semibold text-muted">
               More pages
-            </span>
+            </p>
 
-            <button
-              type="button"
-              onClick={() => setMoreOpen(false)}
-              aria-label="Close more pages"
-              className="rounded p-1 text-[#66716B] hover:bg-[#F1F3EF]"
-            >
-              <X size={17} />
-            </button>
+            {moreLinks.map((item, index) => {
+              const Icon = item.icon;
+
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  ref={index === 0 ? firstMoreLinkRef : undefined}
+                  className={({ isActive }) =>
+                    `flex min-h-12 items-center gap-3 rounded-control px-4 text-base ${
+                      isActive
+                        ? "bg-primary-subtle font-semibold text-primary"
+                        : "text-ink active:bg-tint"
+                    }`
+                  }
+                >
+                  <Icon size={20} strokeWidth={1.8} />
+                  {item.label}
+                </NavLink>
+              );
+            })}
           </div>
+        )}
 
-          {moreLinks.map((item) => {
+        <div className="grid grid-cols-5">
+          {mainLinks.map((item) => {
             const Icon = item.icon;
 
             return (
               <NavLink
                 key={item.path}
                 to={item.path}
-                onClick={() => setMoreOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-md px-3 py-3 text-sm ${
-                    isActive
-                      ? "bg-[#E6EEE8] text-[#426B57]"
-                      : "text-[#66716B] hover:bg-[#F1F3EF]"
-                  }`
-                }
+                className={({ isActive }) => tabClasses(isActive)}
               >
-                <Icon size={18} />
-                {item.label}
+                {({ isActive }) => (
+                  <>
+                    {isActive && <ActiveBar />}
+                    <Icon size={22} strokeWidth={isActive ? 2.1 : 1.8} />
+                    <span>{item.label}</span>
+                  </>
+                )}
               </NavLink>
             );
           })}
+
+          <button
+            ref={moreButtonRef}
+            type="button"
+            onClick={() => setOpenOnPath(moreOpen ? null : pathname)}
+            aria-expanded={moreOpen}
+            aria-controls="more-pages"
+            className={tabClasses(moreOpen || moreActive)}
+          >
+            {(moreOpen || moreActive) && <ActiveBar />}
+            <MoreHorizontal size={22} strokeWidth={moreActive ? 2.1 : 1.8} />
+            <span>More</span>
+          </button>
         </div>
-      )}
-
-      <div className="grid grid-cols-5">
-        {mainLinks.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                `flex min-h-16 flex-col items-center justify-center gap-1 text-xs ${
-                  isActive ? "text-[#426B57]" : "text-[#89938D]"
-                }`
-              }
-            >
-              <Icon size={21} />
-              <span>{item.label}</span>
-            </NavLink>
-          );
-        })}
-
-        <button
-          type="button"
-          onClick={() => setMoreOpen((previous) => !previous)}
-          aria-expanded={moreOpen}
-          className={`flex min-h-16 flex-col items-center justify-center gap-1 text-xs ${
-            moreOpen ? "text-[#426B57]" : "text-[#89938D]"
-          }`}
-        >
-          <MoreHorizontal size={21} />
-          <span>More</span>
-        </button>
-      </div>
-    </nav>
+      </nav>
+    </>
   );
 }

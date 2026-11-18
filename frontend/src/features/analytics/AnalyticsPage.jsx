@@ -1,6 +1,8 @@
-
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { RefreshCw, ChartNoAxesCombined } from "lucide-react";
+
+import { PageContainer, PageHeader } from "../../components/ui/Page";
 
 import DateRangeSelector from "./components/DateRangeSelector";
 import StudyAnalytics from "./components/StudyAnalytics";
@@ -41,37 +43,139 @@ function getInitialDateRange() {
   };
 }
 
-function SectionMessage({ title, message, error = false }) {
+const SECTIONS = [
+  { id: "study", label: "Study" },
+  { id: "tasks", label: "Tasks" },
+  { id: "exams", label: "Exams" },
+  { id: "consistency", label: "Consistency" },
+  { id: "insights", label: "Insights" },
+];
+
+// Jump to a section of this long page (smooth unless reduced motion is on).
+function scrollToSection(id) {
+  const target = document.getElementById(id);
+
+  if (!target) return;
+
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
+  target.scrollIntoView({
+    behavior: reduceMotion ? "auto" : "smooth",
+    block: "start",
+  });
+}
+
+function SectionNav() {
+  return (
+    <nav
+      aria-label="Analytics sections"
+      className="sticky top-0 z-30 -mx-4 border-b border-line bg-canvas px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+    >
+      <ul className="flex gap-1 overflow-x-auto py-1">
+        {SECTIONS.map((section) => (
+          <li key={section.id} className="shrink-0">
+            <button
+              type="button"
+              onClick={() => scrollToSection(section.id)}
+              className="btn btn-quiet min-h-11"
+            >
+              {section.label}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+function SectionMessage({ title, message, error = false, action }) {
   return (
     <div
-      className={`rounded-xl border p-4 ${
-        error
-          ? "border-red-500/20 bg-red-500/5"
-          : "border-[var(--border)] bg-[var(--surface)]"
+      className={`rounded-panel border p-4 ${
+        error ? "border-danger/30 bg-danger-subtle" : "border-line bg-surface"
       }`}
     >
-      <h3 className="text-sm font-semibold text-[var(--foreground)]">
-        {title}
-      </h3>
+      <h3 className="text-sm font-semibold text-ink">{title}</h3>
 
-      <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-        {message}
-      </p>
+      <p className="mt-1 text-sm text-muted">{message}</p>
+
+      {action}
     </div>
+  );
+}
+
+function SectionLink({ to, children }) {
+  return (
+    <Link
+      to={to}
+      className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-primary underline underline-offset-4"
+    >
+      {children}
+    </Link>
+  );
+}
+
+function AnalyticsSection({ id, title, description, children }) {
+  return (
+    <section id={id} aria-labelledby={`${id}-heading`} className="space-y-4">
+      <div>
+        <h2 id={`${id}-heading`} className="text-xl font-semibold text-ink">
+          {title}
+        </h2>
+
+        <p className="mt-1 text-sm text-muted">{description}</p>
+      </div>
+
+      {children}
+    </section>
   );
 }
 
 function LoadingState() {
   return (
-    <div className="flex min-h-48 flex-col items-center justify-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
-      <RefreshCw
-        size={22}
-        className="animate-spin text-[var(--muted-foreground)]"
-      />
+    <div
+      role="status"
+      className="card flex min-h-[40dvh] flex-col items-center justify-center gap-3"
+    >
+      <RefreshCw size={22} className="animate-spin text-muted" />
 
-      <p className="text-sm text-[var(--muted-foreground)]">
-        Loading analytics...
+      <p className="text-sm text-muted">Loading analytics...</p>
+    </div>
+  );
+}
+
+// Shown once for a new user instead of many empty charts.
+function NoDataState() {
+  return (
+    <div className="card px-5 py-10 text-center">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-panel bg-primary-subtle text-primary">
+        <ChartNoAxesCombined size={24} />
+      </div>
+
+      <h2 className="mt-4 text-xl font-semibold text-ink">
+        Nothing to analyse for this period yet
+      </h2>
+
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
+        Analytics are built only from your own records. Record a study
+        session, plan a task or add a mock test, then come back here.
       </p>
+
+      <div className="mt-6 flex flex-col items-stretch justify-center gap-2 sm:flex-row sm:items-center">
+        <Link to="/timer" className="btn btn-primary">
+          Start studying
+        </Link>
+
+        <Link to="/tasks" className="btn btn-secondary">
+          Add a task
+        </Link>
+
+        <Link to="/tests" className="btn btn-secondary">
+          Add a mock test
+        </Link>
+      </div>
     </div>
   );
 }
@@ -155,8 +259,7 @@ export default function AnalyticsPage() {
         nextAnalytics[key] = result.value.data;
       } else {
         nextErrors[key] =
-          result.reason?.message ||
-          `Unable to load ${key} analytics.`;
+          result.reason?.message || `Unable to load ${key} analytics.`;
       }
     });
 
@@ -182,52 +285,45 @@ export default function AnalyticsPage() {
 
   const hasAnyError = Object.keys(errors).length > 0;
 
+  // Which parts of the page have real records to show (display decisions only).
+  const hasStudyData =
+    Number(analytics.study?.summary?.totalStudySeconds) > 0 ||
+    (analytics.study?.dailyStudy ?? []).some(
+      (day) => Number(day.durationMinutes) > 0
+    );
+
+  const hasTaskData = Number(analytics.tasks?.summary?.totalTasks) > 0;
+  const hasTestData = Number(analytics.tests?.summary?.totalTests) > 0;
+
+  const hasAnyData = hasStudyData || hasTaskData || hasTestData;
+
   return (
-    <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-
-      {/* Page heading */}
-      <header className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--muted)]">
-            <ChartNoAxesCombined
-              size={20}
-              className="text-[var(--foreground)]"
-            />
-          </div>
-
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">
-              Analytics
-            </h1>
-
-            <p className="text-sm text-[var(--muted-foreground)]">
-              Understand your study patterns and progress.
-            </p>
-          </div>
-        </div>
-      </header>
-
-      {/* Date range selector */}
-      <DateRangeSelector
-        value={dateRange}
-        onChange={handleDateRangeChange}
+    <PageContainer>
+      <PageHeader
+        title="Analytics"
+        description="Understand your study patterns and progress from your recorded data."
       />
+
+      <DateRangeSelector value={dateRange} onChange={handleDateRangeChange} />
 
       {/* Partial API error notice */}
       {hasAnyError && !loading && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
-          <p className="text-sm font-medium text-[var(--foreground)]">
+        <div
+          role="alert"
+          className="mt-4 rounded-panel border border-danger/30 bg-danger-subtle p-4"
+        >
+          <p className="text-sm font-medium text-ink">
             Some analytics could not be loaded.
           </p>
 
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+          <p className="mt-1 text-sm text-muted">
             Check your connection or try refreshing the data.
           </p>
 
           <button
             type="button"
             onClick={retryAnalytics}
-            className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[var(--foreground)] underline underline-offset-4"
+            className="mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-ink underline underline-offset-4"
           >
             <RefreshCw size={14} />
             Retry
@@ -235,154 +331,136 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* Analytics content */}
       {loading ? (
-        <LoadingState />
-      ) : (
-        <div className="space-y-8">
-
-          {/* Study analytics */}
-          <section className="space-y-3">
-            <div>
-              <h2 className="text-lg font-semibold text-[var(--foreground)]">
-                Study analytics
-              </h2>
-
-              <p className="text-sm text-[var(--muted-foreground)]">
-                Recorded study time and subject-wise activity.
-              </p>
-            </div>
-
-            {errors.study ? (
-              <SectionMessage
-                title="Study analytics unavailable"
-                message={errors.study}
-                error
-              />
-            ) : analytics.study ? (
-              <StudyAnalytics data={analytics.study} />
-            ) : (
-              <SectionMessage
-                title="Study analytics unavailable"
-                message="There is no study analytics data available for this date range."
-              />
-            )}
-          </section>
-
-          {/* Task analytics */}
-          <section className="space-y-3">
-            <div>
-              <h2 className="text-lg font-semibold text-[var(--foreground)]">
-                Task analytics
-              </h2>
-
-              <p className="text-sm text-[var(--muted-foreground)]">
-                Task completion, workload and estimated versus recorded time.
-              </p>
-            </div>
-
-            {errors.tasks ? (
-              <SectionMessage
-                title="Task analytics unavailable"
-                message={errors.tasks}
-                error
-              />
-            ) : analytics.tasks ? (
-              <TaskAnalytics data={analytics.tasks} />
-            ) : (
-              <SectionMessage
-                title="Task analytics unavailable"
-                message="There is no task analytics data available for this date range."
-              />
-            )}
-          </section>
-
-          {/* Exam analytics */}
-          <section className="space-y-3">
-            <div>
-              <h2 className="text-lg font-semibold text-[var(--foreground)]">
-                Exam analytics
-              </h2>
-
-              <p className="text-sm text-[var(--muted-foreground)]">
-                Mock-test performance and subject-wise trends.
-              </p>
-            </div>
-
-            {errors.tests ? (
-              <SectionMessage
-                title="Exam analytics unavailable"
-                message={errors.tests}
-                error
-              />
-            ) : analytics.tests ? (
-              <TestAnalytics data={analytics.tests} />
-            ) : (
-              <SectionMessage
-                title="Exam analytics unavailable"
-                message="There is no exam analytics data available for this date range."
-              />
-            )}
-          </section>
-
-          {/* Study consistency heatmap */}
-          <section className="space-y-3">
-            <div>
-              <h2 className="text-lg font-semibold text-[var(--foreground)]">
-                Study consistency
-              </h2>
-
-              <p className="text-sm text-[var(--muted-foreground)]">
-                Your recorded study activity across calendar days.
-              </p>
-            </div>
-
-            {errors.heatmap ? (
-              <SectionMessage
-                title="Study consistency unavailable"
-                message={errors.heatmap}
-                error
-              />
-            ) : analytics.heatmap ? (
-              <Heatmap data={analytics.heatmap} />
-            ) : (
-              <SectionMessage
-                title="Study consistency unavailable"
-                message="There is no heatmap data available for this date range."
-              />
-            )}
-          </section>
-
-          {/* Evidence-based insights */}
-          <section className="space-y-3">
-            <div>
-              <h2 className="text-lg font-semibold text-[var(--foreground)]">
-                Insights
-              </h2>
-
-              <p className="text-sm text-[var(--muted-foreground)]">
-                Evidence-based observations from your recorded data.
-              </p>
-            </div>
-
-            {errors.insights ? (
-              <SectionMessage
-                title="Insights unavailable"
-                message={errors.insights}
-                error
-              />
-            ) : analytics.insights ? (
-              <Insights data={analytics.insights} />
-            ) : (
-              <SectionMessage
-                title="Insights unavailable"
-                message="There are no insights available for this date range."
-              />
-            )}
-          </section>
-
+        <div className="mt-6">
+          <LoadingState />
         </div>
+      ) : !hasAnyError && !hasAnyData ? (
+        <div className="mt-6">
+          <NoDataState />
+        </div>
+      ) : (
+        <>
+          <div className="mt-4">
+            <SectionNav />
+          </div>
+
+          <div className="mt-6 space-y-10">
+            {/* Study analytics */}
+            <AnalyticsSection
+              id="study"
+              title="Study"
+              description="Recorded study time and subject-wise activity."
+            >
+              {errors.study ? (
+                <SectionMessage
+                  title="Study analytics unavailable"
+                  message={errors.study}
+                  error
+                />
+              ) : hasStudyData ? (
+                <StudyAnalytics data={analytics.study} />
+              ) : (
+                <SectionMessage
+                  title="No study sessions in this period"
+                  message="Sessions you record with the timer or add manually will appear here."
+                  action={<SectionLink to="/timer">Start studying</SectionLink>}
+                />
+              )}
+            </AnalyticsSection>
+
+            {/* Task analytics */}
+            <AnalyticsSection
+              id="tasks"
+              title="Tasks"
+              description="Task completion, workload and estimated versus recorded time."
+            >
+              {errors.tasks ? (
+                <SectionMessage
+                  title="Task analytics unavailable"
+                  message={errors.tasks}
+                  error
+                />
+              ) : hasTaskData ? (
+                <TaskAnalytics data={analytics.tasks} />
+              ) : (
+                <SectionMessage
+                  title="No tasks planned in this period"
+                  message="Tasks with a planned date in this period will appear here."
+                  action={<SectionLink to="/tasks">Plan a task</SectionLink>}
+                />
+              )}
+            </AnalyticsSection>
+
+            {/* Exam analytics */}
+            <AnalyticsSection
+              id="exams"
+              title="Exams"
+              description="Mock-test performance and subject-wise trends."
+            >
+              {errors.tests ? (
+                <SectionMessage
+                  title="Exam analytics unavailable"
+                  message={errors.tests}
+                  error
+                />
+              ) : hasTestData ? (
+                <TestAnalytics data={analytics.tests} />
+              ) : (
+                <SectionMessage
+                  title="No mock tests in this period"
+                  message="Tests you record will appear here with their percentage and trend."
+                  action={<SectionLink to="/tests">Add a mock test</SectionLink>}
+                />
+              )}
+            </AnalyticsSection>
+
+            {/* Study consistency heatmap */}
+            <AnalyticsSection
+              id="consistency"
+              title="Study consistency"
+              description="Your recorded study activity across calendar days."
+            >
+              {errors.heatmap ? (
+                <SectionMessage
+                  title="Study consistency unavailable"
+                  message={errors.heatmap}
+                  error
+                />
+              ) : analytics.heatmap && hasStudyData ? (
+                <Heatmap data={analytics.heatmap} />
+              ) : (
+                <SectionMessage
+                  title="No study activity to show yet"
+                  message="Days with recorded study will appear on this calendar."
+                />
+              )}
+            </AnalyticsSection>
+
+            {/* Evidence-based insights */}
+            <AnalyticsSection
+              id="insights"
+              title="Insights"
+              description="Evidence-based observations from your recorded data."
+            >
+              {errors.insights ? (
+                <SectionMessage
+                  title="Insights unavailable"
+                  message={errors.insights}
+                  error
+                />
+              ) : analytics.insights ? (
+                <Insights data={analytics.insights} />
+              ) : (
+                <SectionMessage
+                  title="No insights yet"
+                  message="Insights appear when there is enough recorded data."
+                />
+              )}
+            </AnalyticsSection>
+          </div>
+        </>
       )}
-    </main>
+    </PageContainer>
   );
 }

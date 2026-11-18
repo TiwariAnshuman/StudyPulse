@@ -12,14 +12,14 @@ import {
   YAxis,
 } from "recharts";
 
-import {
-  CheckCircle2,
-  Clock3,
-  ListTodo,
-  Timer,
-} from "lucide-react";
-
 import MetricCard from "./MetricCard";
+import ChartSummary from "./ChartSummary";
+import {
+  AXIS_TICK,
+  CHART_ANIMATION,
+  GRID_STROKE,
+  TOOLTIP_STYLE,
+} from "../chartTheme";
 import {
   formatDurationFromMinutes,
   formatPercentage,
@@ -27,21 +27,21 @@ import {
 
 // Chart colours follow a calm, non-neon visual style.
 const STATUS_COLORS = {
-  Completed: "#16A34A",
-  "To do": "#94A3B8",
-  "In progress": "#D97706",
+  Completed: "#426B57",
+  "In progress": "#B7793E",
+  "To do": "#8A948E",
 };
 
 function ChartCard({ title, description, children }) {
   return (
-    <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+    <section className="rounded-panel border border-line bg-surface p-4 sm:p-5">
       <div className="mb-5">
-        <h3 className="text-base font-semibold text-foreground">
+        <h3 className="text-base font-semibold text-ink">
           {title}
         </h3>
 
         {description && (
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-muted">
             {description}
           </p>
         )}
@@ -54,8 +54,8 @@ function ChartCard({ title, description, children }) {
 
 function EmptyChart({ message }) {
   return (
-    <div className="flex min-h-[240px] items-center justify-center rounded-lg border border-dashed border-border px-5 text-center">
-      <p className="max-w-xs text-sm text-muted-foreground">
+    <div className="flex min-h-[160px] items-center justify-center rounded-control border border-dashed border-line px-5 text-center">
+      <p className="max-w-xs text-sm text-muted">
         {message}
       </p>
     </div>
@@ -71,12 +71,12 @@ function TaskAnalytics({ data }) {
 
   if (!summary) {
     return (
-      <section className="rounded-xl border border-border bg-card p-6">
-        <h2 className="text-lg font-semibold text-foreground">
+      <section className="rounded-panel border border-line bg-surface p-6">
+        <h2 className="text-xl font-semibold text-ink">
           Task Analytics
         </h2>
 
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-muted">
           Task analytics data is not available yet.
         </p>
       </section>
@@ -121,41 +121,24 @@ function TaskAnalytics({ data }) {
     .slice(0, 8)
     .map((task) => ({
       name:
-        task.title?.length > 18
-          ? `${task.title.slice(0, 18)}...`
+        task.title?.length > 15
+          ? `${task.title.slice(0, 15)}…`
           : task.title || "Untitled task",
+      fullName: task.title || "Untitled task",
       estimated: task.estimateMinutes ?? 0,
       actual: task.actualLinkedMinutes ?? 0,
     }));
 
-  const tooltipStyle = {
-    backgroundColor: "var(--tooltip-background, #ffffff)",
-    border: "1px solid var(--border, #e5e7eb)",
-    borderRadius: "10px",
-    fontSize: "12px",
-  };
 
   return (
     <section className="space-y-6">
-      {/* Section heading */}
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight text-foreground">
-          Task Analytics
-        </h2>
-
-        <p className="mt-1 text-sm text-muted-foreground">
-          Understand your task completion and planned workload.
-        </p>
-      </div>
-
       {/* Metric cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <MetricCard
           title="Total Tasks"
           value={hasTasks ? totalTasks : null}
           description="Tasks planned in this period"
           calculation="Count of tasks whose planned date falls within the selected date range."
-          icon={ListTodo}
         />
 
         <MetricCard
@@ -168,7 +151,6 @@ function TaskAnalytics({ data }) {
           }
           description="Share of tasks marked completed"
           calculation="Completed tasks divided by total tasks in the selected period, multiplied by 100. Not available when there are no tasks."
-          icon={CheckCircle2}
         />
 
         <MetricCard
@@ -176,7 +158,6 @@ function TaskAnalytics({ data }) {
           value={hasTasks ? overdueTasks : null}
           description="Tasks currently overdue"
           calculation="Count of tasks classified as overdue by the backend. Check the selected-period scope before interpreting this number."
-          icon={Clock3}
         />
 
         <MetricCard
@@ -188,7 +169,6 @@ function TaskAnalytics({ data }) {
           }
           description="Study time linked to these tasks"
           calculation="Sum of valid study-session duration linked to the tasks. This is not necessarily all study time recorded in the selected period."
-          icon={Timer}
         />
       </div>
 
@@ -206,10 +186,10 @@ function TaskAnalytics({ data }) {
               <EmptyChart message="There is no task status data to display." />
             ) : (
               <>
-                <div className="h-[260px] w-full">
+                <div className="h-[260px] w-full" aria-hidden="true">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie
+                      <Pie isAnimationActive={CHART_ANIMATION}
                         data={statusData}
                         dataKey="value"
                         nameKey="name"
@@ -229,7 +209,7 @@ function TaskAnalytics({ data }) {
                       </Pie>
 
                       <Tooltip
-                        contentStyle={tooltipStyle}
+                        contentStyle={TOOLTIP_STYLE}
                         formatter={(value, name) => [
                           `${value} tasks`,
                           name,
@@ -252,11 +232,11 @@ function TaskAnalytics({ data }) {
                         }}
                       />
 
-                      <span className="text-muted-foreground">
+                      <span className="text-muted">
                         {item.name}
                       </span>
 
-                      <span className="font-medium text-foreground">
+                      <span className="font-medium text-ink">
                         {item.value}
                       </span>
                     </div>
@@ -275,75 +255,53 @@ function TaskAnalytics({ data }) {
               <EmptyChart message="No tasks with time estimates are available for comparison." />
             ) : (
               <>
-                <div className="h-[260px] w-full">
+                <div
+                  className="w-full"
+                  style={{ height: Math.max(220, estimateChartData.length * 54 + 40) }}
+                  aria-hidden="true"
+                >
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
+                      layout="vertical"
                       data={estimateChartData}
-                      margin={{
-                        top: 10,
-                        right: 8,
-                        left: -18,
-                        bottom: 8,
-                      }}
+                      margin={{ top: 4, right: 12, left: 0, bottom: 4 }}
+                      barGap={2}
+                      barCategoryGap={10}
                     >
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        vertical={false}
-                        stroke="var(--border, #e5e7eb)"
-                      />
-
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fontSize: 11 }}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-
-                      <YAxis
-                        tick={{ fontSize: 11 }}
-                        tickLine={false}
-                        axisLine={false}
-                        unit="m"
-                      />
-
+                      <CartesianGrid stroke={GRID_STROKE} strokeDasharray="3 3" horizontal={false} />
+                      <XAxis type="number" tick={AXIS_TICK} tickLine={false} axisLine={false} unit="m" />
+                      <YAxis type="category" dataKey="name" width={112} interval={0} tick={AXIS_TICK} tickLine={false} axisLine={false} />
                       <Tooltip
-                        contentStyle={tooltipStyle}
+                        contentStyle={TOOLTIP_STYLE}
+                        labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName ?? label}
                         formatter={(value, name) => [
                           `${value} minutes`,
-                          name === "estimated"
-                            ? "Estimated"
-                            : "Actual linked time",
+                          name === "estimated" ? "Estimated" : "Actual linked time",
                         ]}
                       />
-
-                      <Bar
-                        dataKey="estimated"
-                        name="Estimated"
-                        fill="#94A3B8"
-                        radius={[5, 5, 0, 0]}
-                      />
-
-                      <Bar
-                        dataKey="actual"
-                        name="Actual linked time"
-                        fill="#D97706"
-                        radius={[5, 5, 0, 0]}
-                      />
+                      <Bar isAnimationActive={CHART_ANIMATION} dataKey="estimated" name="Estimated" fill="#8A948E" radius={[0, 5, 5, 0]} maxBarSize={14} />
+                      <Bar isAnimationActive={CHART_ANIMATION} dataKey="actual" name="Actual linked time" fill="#426B57" radius={[0, 5, 5, 0]} maxBarSize={14} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
 
+                <ChartSummary
+                  caption="Estimated and actual linked study time per task"
+                  columns={["Task", "Estimated (minutes)", "Actual linked (minutes)"]}
+                  rows={estimateChartData.map((task) => [task.fullName, task.estimated, task.actual])}
+                />
+
                 <div className="flex flex-wrap justify-center gap-5 text-sm">
                   <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-sm bg-slate-400" />
-                    <span className="text-muted-foreground">
+                    <span className="h-2.5 w-2.5 rounded-sm bg-[#8A948E]" />
+                    <span className="text-muted">
                       Estimated
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-sm bg-amber-600" />
-                    <span className="text-muted-foreground">
+                    <span className="h-2.5 w-2.5 rounded-sm bg-primary" />
+                    <span className="text-muted">
                       Actual linked time
                     </span>
                   </div>
@@ -363,30 +321,30 @@ function TaskAnalytics({ data }) {
           <EmptyChart message="Workload information will appear after you create tasks." />
         ) : (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div className="rounded-lg bg-muted/50 p-4">
-              <p className="text-sm text-muted-foreground">
+            <div className="rounded-control bg-canvas p-4">
+              <p className="text-sm text-muted">
                 Planned Workload
               </p>
 
-              <p className="mt-2 text-2xl font-semibold text-foreground">
+              <p className="mt-2 text-[25px] font-semibold text-ink">
                 {formatDurationFromMinutes(plannedWorkloadMinutes)}
               </p>
 
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-muted">
                 Sum of available task estimates
               </p>
             </div>
 
-            <div className="rounded-lg bg-muted/50 p-4">
-              <p className="text-sm text-muted-foreground">
+            <div className="rounded-control bg-canvas p-4">
+              <p className="text-sm text-muted">
                 Completed Workload
               </p>
 
-              <p className="mt-2 text-2xl font-semibold text-foreground">
+              <p className="mt-2 text-[25px] font-semibold text-ink">
                 {formatDurationFromMinutes(completedWorkloadMinutes)}
               </p>
 
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-muted">
                 Estimated workload of completed tasks
               </p>
             </div>
@@ -394,41 +352,16 @@ function TaskAnalytics({ data }) {
         )}
 
         {hasTasks && (
-          <div className="mt-5 grid grid-cols-2 gap-4 border-t border-border pt-5 sm:grid-cols-4">
-            <div>
-              <p className="text-xs text-muted-foreground">Completed</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">
-                {completedTasks}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs text-muted-foreground">To do</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">
-                {pendingTasks}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs text-muted-foreground">In progress</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">
-                {inProgressTasks}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs text-muted-foreground">With linked sessions</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">
-                {tasksWithLinkedSessions}
-              </p>
-            </div>
-          </div>
+          <p className="mt-4 border-t border-line pt-4 text-sm text-muted">
+            Tasks with linked study sessions:{" "}
+            <strong className="font-semibold text-ink">{tasksWithLinkedSessions}</strong>
+          </p>
         )}
       </ChartCard>
 
       {/* Data coverage note */}
       {estimatedTaskCount > 0 && (
-        <p className="text-xs leading-relaxed text-muted-foreground">
+        <p className="text-xs leading-relaxed text-muted">
           Time estimates are available for {estimatedTaskCount} tasks
           {estimateCoverageRate !== null &&
           estimateCoverageRate !== undefined

@@ -6,7 +6,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -15,30 +14,21 @@ import {
   YAxis,
 } from "recharts";
 
-import {
-  BookOpen,
-  CalendarCheck,
-  Clock3,
-  Target,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { BookOpen } from "lucide-react";
 
 import MetricCard from "./MetricCard";
+import ChartSummary from "./ChartSummary";
+import {
+  AXIS_TICK,
+  CHART_ANIMATION,
+  CHART_COLORS,
+  GRID_STROKE,
+  TOOLTIP_STYLE,
+} from "../chartTheme";
 import {
   formatDurationFromMinutes,
   formatPercentage,
 } from "../analytics.utils";
-
-// Calm, consistent chart palette
-const CHART_COLORS = [
-  "#64748B",
-  "#0D9488",
-  "#D97706",
-  "#6366F1",
-  "#0891B2",
-  "#8B5CF6",
-];
 
 const formatChartDate = (value) => {
   if (!value) return "";
@@ -53,22 +43,14 @@ const formatChartDate = (value) => {
   });
 };
 
-const formatHours = (minutes) => {
-  if (minutes === null || minutes === undefined) return "—";
-
-  const hours = minutes / 60;
-
-  return `${Number(hours.toFixed(1))}h`;
-};
-
 const ChartCard = ({ title, description, children, className = "" }) => (
   <section
-    className={`rounded-xl border border-border bg-card p-5 shadow-sm ${className}`}
+    className={`rounded-panel border border-line bg-surface p-4 sm:p-5 ${className}`}
   >
     <div className="mb-5">
-      <h3 className="text-base font-semibold text-foreground">{title}</h3>
+      <h3 className="text-base font-semibold text-ink">{title}</h3>
       {description && (
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+        <p className="mt-1 text-sm text-muted">{description}</p>
       )}
     </div>
 
@@ -77,35 +59,13 @@ const ChartCard = ({ title, description, children, className = "" }) => (
 );
 
 const EmptyChart = ({ message = "Not enough study data for this period." }) => (
-  <div className="flex min-h-[240px] items-center justify-center rounded-lg border border-dashed border-border px-5 text-center">
+  <div className="flex min-h-[160px] items-center justify-center rounded-control border border-dashed border-line px-5 text-center">
     <div>
-      <BookOpen className="mx-auto mb-3 h-7 w-7 text-muted-foreground/60" />
-      <p className="text-sm text-muted-foreground">{message}</p>
+      <BookOpen className="mx-auto mb-3 h-7 w-7 text-muted" />
+      <p className="text-sm text-muted">{message}</p>
     </div>
   </div>
 );
-
-const CustomTooltip = ({ active, payload, label, valueLabel = "Study time" }) => {
-  if (!active || !payload?.length) return null;
-
-  return (
-    <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-lg">
-      {label && (
-        <p className="mb-1 text-xs text-muted-foreground">{label}</p>
-      )}
-
-      {payload.map((item, index) => (
-        <p
-          key={`${item.name}-${index}`}
-          className="text-sm font-medium text-foreground"
-        >
-          {item.name ? `${item.name}: ` : `${valueLabel}: `}
-          {item.value}
-        </p>
-      ))}
-    </div>
-  );
-};
 
 const StudyAnalytics = ({ data }) => {
   const summary = data?.summary ?? {};
@@ -133,23 +93,23 @@ const StudyAnalytics = ({ data }) => {
 
   const sessionDurationData = [
     {
-      label: "Under 15 min",
+      label: "<15m",
       count: sessionDurationDistribution.under15Minutes,
     },
     {
-      label: "15–29 min",
+      label: "15–29m",
       count: sessionDurationDistribution.from15To29Minutes,
     },
     {
-      label: "30–59 min",
+      label: "30–59m",
       count: sessionDurationDistribution.from30To59Minutes,
     },
     {
-      label: "60–119 min",
+      label: "1–2h",
       count: sessionDurationDistribution.from60To119Minutes,
     },
     {
-      label: "120+ min",
+      label: "2h+",
       count: sessionDurationDistribution.from120Minutes,
     },
   ].map((item) => ({
@@ -170,7 +130,6 @@ const StudyAnalytics = ({ data }) => {
       description: "Recorded study time in this period",
       calculation:
         "Sum of the duration of all valid study sessions within the selected date range.",
-      icon: <Clock3 className="h-5 w-5" />,
     },
     {
       title: "Daily average",
@@ -180,7 +139,6 @@ const StudyAnalytics = ({ data }) => {
       description: "Average across calendar days",
       calculation:
         "Total study time divided by the number of calendar days in the selected range.",
-      icon: <TrendingUp className="h-5 w-5" />,
     },
     {
       title: "Active-day average",
@@ -191,7 +149,6 @@ const StudyAnalytics = ({ data }) => {
       description: "Average on days with recorded study",
       calculation:
         "Total study time divided by the number of days with recorded study sessions.",
-      icon: <CalendarCheck className="h-5 w-5" />,
     },
     {
       title: "Active days",
@@ -199,7 +156,6 @@ const StudyAnalytics = ({ data }) => {
       description: "Days with recorded study sessions",
       calculation:
         "Count of calendar days that contain at least one recorded study session.",
-      icon: <Users className="h-5 w-5" />,
     },
     {
       title: "Consistency rate",
@@ -211,7 +167,6 @@ const StudyAnalytics = ({ data }) => {
       description: "Study activity across the selected period",
       calculation:
         "The percentage of calendar days in the selected range that contain recorded study activity.",
-      icon: <Target className="h-5 w-5" />,
     },
     {
       title: "Daily target completion",
@@ -223,25 +178,14 @@ const StudyAnalytics = ({ data }) => {
       description: "Days that reached the daily target",
       calculation:
         "The percentage of eligible days on which recorded study time reached the configured daily target. Unavailable when no target is configured.",
-      icon: <Target className="h-5 w-5" />,
     },
   ];
 
   return (
     <div className="space-y-6">
       {/* Study summary */}
-      <section>
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-foreground">
-            Study overview
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Understand how your study time is distributed across the selected
-            period.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <section aria-label="Study summary">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
           {metrics.map((metric) => (
             <MetricCard key={metric.title} {...metric} />
           ))}
@@ -254,35 +198,14 @@ const StudyAnalytics = ({ data }) => {
         description="Your recorded study time day by day."
       >
         {hasStudyData && dailyStudy.length > 0 ? (
-          <div className="h-[280px] w-full">
+          <div className="h-[280px] w-full" aria-hidden="true">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={dailyStudy}
                 margin={{ top: 10, right: 10, left: -15, bottom: 0 }}
               >
-                <defs>
-                  <linearGradient
-                    id="studyTimeGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="0%"
-                      stopColor="#0D9488"
-                      stopOpacity={0.22}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="#0D9488"
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
-
                 <CartesianGrid
-                  stroke="var(--border)"
+                  stroke={GRID_STROKE}
                   strokeDasharray="3 3"
                   vertical={false}
                 />
@@ -290,14 +213,14 @@ const StudyAnalytics = ({ data }) => {
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatChartDate}
-                  tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+                  tick={AXIS_TICK}
                   axisLine={false}
                   tickLine={false}
                   minTickGap={24}
                 />
 
                 <YAxis
-                  tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+                  tick={AXIS_TICK}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={(value) => `${value}m`}
@@ -309,21 +232,17 @@ const StudyAnalytics = ({ data }) => {
                     formatDurationFromMinutes(value),
                     "Study time",
                   ]}
-                  contentStyle={{
-                    backgroundColor: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "10px",
-                    fontSize: "12px",
-                  }}
+                  contentStyle={TOOLTIP_STYLE}
                 />
 
-                <Area
+                <Area isAnimationActive={CHART_ANIMATION}
                   type="monotone"
                   dataKey="durationMinutes"
                   name="Study time"
-                  stroke="#0D9488"
+                  stroke="#426B57"
                   strokeWidth={2.5}
-                  fill="url(#studyTimeGradient)"
+                  fill="#426B57"
+                  fillOpacity={0.12}
                   activeDot={{ r: 5 }}
                   connectNulls={false}
                 />
@@ -332,6 +251,17 @@ const StudyAnalytics = ({ data }) => {
           </div>
         ) : (
           <EmptyChart message="No recorded study sessions for this date range." />
+        )}
+
+        {hasStudyData && dailyStudy.length > 0 && (
+          <ChartSummary
+            caption="Recorded study time per day"
+            columns={["Date", "Study time"]}
+            rows={dailyStudy.map((day) => [
+              formatChartDate(day.date),
+              formatDurationFromMinutes(day.durationMinutes),
+            ])}
+          />
         )}
       </ChartCard>
 
@@ -343,10 +273,10 @@ const StudyAnalytics = ({ data }) => {
         >
           {hasSubjectData ? (
             <>
-              <div className="h-[250px] w-full">
+              <div className="h-[250px] w-full" aria-hidden="true">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie
+                    <Pie isAnimationActive={CHART_ANIMATION}
                       data={subjectDistribution}
                       dataKey="durationMinutes"
                       nameKey="subject"
@@ -369,19 +299,9 @@ const StudyAnalytics = ({ data }) => {
                         formatDurationFromMinutes(value),
                         name,
                       ]}
-                      contentStyle={{
-                        backgroundColor: "var(--card)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "10px",
-                        fontSize: "12px",
-                      }}
+                      contentStyle={TOOLTIP_STYLE}
                     />
 
-                    <Legend
-                      verticalAlign="bottom"
-                      iconType="circle"
-                      wrapperStyle={{ fontSize: "12px" }}
-                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -400,16 +320,16 @@ const StudyAnalytics = ({ data }) => {
                             CHART_COLORS[index % CHART_COLORS.length],
                         }}
                       />
-                      <span className="truncate text-foreground">
+                      <span className="truncate text-ink">
                         {item.subject}
                       </span>
                     </div>
 
                     <div className="shrink-0 text-right">
-                      <span className="font-medium text-foreground">
+                      <span className="font-medium text-ink">
                         {formatPercentage(item.percentage)}
                       </span>
-                      <span className="ml-2 text-muted-foreground">
+                      <span className="ml-2 text-muted">
                         {formatDurationFromMinutes(item.durationMinutes)}
                       </span>
                     </div>
@@ -431,16 +351,16 @@ const StudyAnalytics = ({ data }) => {
               {activityDistribution.map((item, index) => (
                 <div key={`${item.activityType}-${index}`}>
                   <div className="mb-2 flex items-center justify-between gap-3">
-                    <span className="text-sm font-medium capitalize text-foreground">
+                    <span className="text-sm font-medium capitalize text-ink">
                       {String(item.activityType).replace(/[-_]/g, " ")}
                     </span>
 
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-muted">
                       {formatPercentage(item.percentage)}
                     </span>
                   </div>
 
-                  <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                  <div className="h-2.5 overflow-hidden rounded-full bg-tint">
                     <div
                       className="h-full rounded-full transition-all"
                       style={{
@@ -454,7 +374,7 @@ const StudyAnalytics = ({ data }) => {
                     />
                   </div>
 
-                  <p className="mt-1.5 text-xs text-muted-foreground">
+                  <p className="mt-1.5 text-xs text-muted">
                     {formatDurationFromMinutes(item.durationMinutes)}
                   </p>
                 </div>
@@ -472,43 +392,39 @@ const StudyAnalytics = ({ data }) => {
         description="Number of sessions grouped by their recorded duration."
       >
         {hasSessionDurationData ? (
-          <div className="h-[260px] w-full">
+          <div className="h-[260px] w-full" aria-hidden="true">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={sessionDurationData}
                 margin={{ top: 10, right: 10, left: -15, bottom: 0 }}
               >
                 <CartesianGrid
-                  stroke="var(--border)"
+                  stroke={GRID_STROKE}
                   strokeDasharray="3 3"
                   vertical={false}
                 />
 
                 <XAxis
                   dataKey="label"
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                  interval={0}
+                  tick={AXIS_TICK}
                   axisLine={false}
                   tickLine={false}
                 />
 
                 <YAxis
                   allowDecimals={false}
-                  tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+                  tick={AXIS_TICK}
                   axisLine={false}
                   tickLine={false}
                 />
 
                 <Tooltip
                   formatter={(value) => [value, "Sessions"]}
-                  contentStyle={{
-                    backgroundColor: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "10px",
-                    fontSize: "12px",
-                  }}
+                  contentStyle={TOOLTIP_STYLE}
                 />
 
-                <Bar
+                <Bar isAnimationActive={CHART_ANIMATION}
                   dataKey="count"
                   name="Sessions"
                   fill="#64748B"
@@ -520,6 +436,14 @@ const StudyAnalytics = ({ data }) => {
           </div>
         ) : (
           <EmptyChart message="Session duration data will appear after you save study sessions." />
+        )}
+
+        {hasSessionDurationData && (
+          <ChartSummary
+            caption="Number of sessions by duration"
+            columns={["Duration", "Sessions"]}
+            rows={sessionDurationData.map((item) => [item.label, item.count])}
+          />
         )}
       </ChartCard>
     </div>

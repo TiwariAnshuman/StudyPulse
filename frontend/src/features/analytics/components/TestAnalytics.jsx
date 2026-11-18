@@ -11,22 +11,24 @@ import {
   BarChart,
 } from "recharts";
 
-import {
-  BookOpenCheck,
-  Target,
-  TrendingUp,
-  ClipboardCheck,
-} from "lucide-react";
+import { BookOpenCheck } from "lucide-react";
 
 import MetricCard from "./MetricCard";
+import ChartSummary from "./ChartSummary";
+import {
+  AXIS_TICK,
+  CHART_ANIMATION,
+  GRID_STROKE,
+  TOOLTIP_STYLE,
+} from "../chartTheme";
 import { formatPercentage } from "../analytics.utils";
 
 const ChartCard = ({ title, description, children }) => (
-  <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+  <section className="rounded-panel border border-line bg-surface p-4 sm:p-5">
     <div className="mb-5">
-      <h3 className="text-base font-semibold text-foreground">{title}</h3>
+      <h3 className="text-base font-semibold text-ink">{title}</h3>
       {description && (
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+        <p className="mt-1 text-sm text-muted">{description}</p>
       )}
     </div>
     {children}
@@ -34,10 +36,10 @@ const ChartCard = ({ title, description, children }) => (
 );
 
 const EmptyChart = ({ message }) => (
-  <div className="flex min-h-[240px] items-center justify-center rounded-lg border border-dashed border-border px-5 text-center">
+  <div className="flex min-h-[160px] items-center justify-center rounded-control border border-dashed border-line px-5 text-center">
     <div>
-      <BookOpenCheck className="mx-auto mb-3 h-7 w-7 text-muted-foreground/60" />
-      <p className="text-sm text-muted-foreground">{message}</p>
+      <BookOpenCheck className="mx-auto mb-3 h-7 w-7 text-muted" />
+      <p className="text-sm text-muted">{message}</p>
     </div>
   </div>
 );
@@ -87,7 +89,6 @@ const TestAnalytics = ({ data }) => {
         : "Most recently recorded test",
       calculation:
         "Percentage calculated from the latest recorded test using its saved marks and maximum marks.",
-      icon: <ClipboardCheck className="h-5 w-5" />,
     },
     {
       title: "Average percentage",
@@ -99,7 +100,6 @@ const TestAnalytics = ({ data }) => {
       description: "Average across recorded tests",
       calculation:
         "Average percentage of valid recorded tests in the selected date range.",
-      icon: <TrendingUp className="h-5 w-5" />,
     },
     {
       title: "Average accuracy",
@@ -111,7 +111,6 @@ const TestAnalytics = ({ data }) => {
       description: "Correct answers among attempted questions",
       calculation:
         "Accuracy is based on valid correct and attempted question counts. It is unavailable when the required counts are missing or invalid.",
-      icon: <Target className="h-5 w-5" />,
     },
     {
       title: "Average attempt rate",
@@ -123,24 +122,14 @@ const TestAnalytics = ({ data }) => {
       description: "Questions attempted out of total questions",
       calculation:
         "Attempt rate is based on attempted questions divided by total questions, where valid question counts are available.",
-      icon: <BookOpenCheck className="h-5 w-5" />,
     },
   ];
 
   return (
     <div className="space-y-6">
       {/* Overview */}
-      <section>
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-foreground">
-            Exam performance
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Review your recorded mock-test results and performance patterns.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="Exam summary">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {metrics.map((metric) => (
             <MetricCard key={metric.title} {...metric} />
           ))}
@@ -153,14 +142,14 @@ const TestAnalytics = ({ data }) => {
         description="Percentage recorded in each test over the selected period."
       >
         {hasTestData && testTrend.length > 0 ? (
-          <div className="h-[280px] w-full">
+          <div className="h-[280px] w-full" aria-hidden="true">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={testTrend}
                 margin={{ top: 10, right: 10, left: -15, bottom: 5 }}
               >
                 <CartesianGrid
-                  stroke="var(--border)"
+                  stroke={GRID_STROKE}
                   strokeDasharray="3 3"
                   vertical={false}
                 />
@@ -168,7 +157,7 @@ const TestAnalytics = ({ data }) => {
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatTestDate}
-                  tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+                  tick={AXIS_TICK}
                   axisLine={false}
                   tickLine={false}
                   minTickGap={24}
@@ -176,7 +165,7 @@ const TestAnalytics = ({ data }) => {
 
                 <YAxis
                   domain={[0, 100]}
-                  tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+                  tick={AXIS_TICK}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={(value) => `${value}%`}
@@ -188,21 +177,16 @@ const TestAnalytics = ({ data }) => {
                     formatPercentage(value),
                     "Percentage",
                   ]}
-                  contentStyle={{
-                    backgroundColor: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "10px",
-                    fontSize: "12px",
-                  }}
+                  contentStyle={TOOLTIP_STYLE}
                 />
 
-                <Line
+                <Line isAnimationActive={CHART_ANIMATION}
                   type="monotone"
                   dataKey="percentage"
                   name="Test percentage"
-                  stroke="#0D9488"
+                  stroke="#426B57"
                   strokeWidth={2.5}
-                  dot={{ r: 4, fill: "#0D9488" }}
+                  dot={{ r: 4, fill: "#426B57" }}
                   activeDot={{ r: 6 }}
                   connectNulls={false}
                 />
@@ -212,6 +196,14 @@ const TestAnalytics = ({ data }) => {
         ) : (
           <EmptyChart message="Your test score trend will appear after you record mock-test results." />
         )}
+
+        {hasTestData && testTrend.length > 0 && (
+          <ChartSummary
+            caption="Percentage in each recorded test"
+            columns={["Test date", "Percentage"]}
+            rows={testTrend.map((test) => [formatTestDate(test.date), formatPercentage(test.percentage)])}
+          />
+        )}
       </ChartCard>
 
       {/* Subject-wise performance */}
@@ -220,7 +212,7 @@ const TestAnalytics = ({ data }) => {
         description="Compare recorded performance across subjects."
       >
         {hasTestData && subjectTrend.length > 0 ? (
-          <div className="h-[280px] w-full">
+          <div className="h-[280px] w-full" aria-hidden="true">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={subjectTrend}
@@ -228,7 +220,7 @@ const TestAnalytics = ({ data }) => {
                 margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
               >
                 <CartesianGrid
-                  stroke="var(--border)"
+                  stroke={GRID_STROKE}
                   strokeDasharray="3 3"
                   horizontal={false}
                 />
@@ -237,7 +229,7 @@ const TestAnalytics = ({ data }) => {
                   type="number"
                   domain={[0, 100]}
                   tickFormatter={(value) => `${value}%`}
-                  tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+                  tick={AXIS_TICK}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -246,7 +238,7 @@ const TestAnalytics = ({ data }) => {
                   type="category"
                   dataKey="subject"
                   width={90}
-                  tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
+                  tick={AXIS_TICK}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -256,18 +248,13 @@ const TestAnalytics = ({ data }) => {
                     formatPercentage(value),
                     "Performance",
                   ]}
-                  contentStyle={{
-                    backgroundColor: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "10px",
-                    fontSize: "12px",
-                  }}
+                  contentStyle={TOOLTIP_STYLE}
                 />
 
-                <Bar
+                <Bar isAnimationActive={CHART_ANIMATION}
                   dataKey="percentage"
                   name="Subject percentage"
-                  fill="#64748B"
+                  fill="#426B57"
                   radius={[0, 5, 5, 0]}
                   maxBarSize={28}
                 />
@@ -276,6 +263,14 @@ const TestAnalytics = ({ data }) => {
           </div>
         ) : (
           <EmptyChart message="Subject-wise performance will appear when valid subject test results are available." />
+        )}
+
+        {hasTestData && subjectTrend.length > 0 && (
+          <ChartSummary
+            caption="Percentage by subject"
+            columns={["Subject", "Percentage"]}
+            rows={subjectTrend.map((item) => [item.subject, formatPercentage(item.percentage)])}
+          />
         )}
       </ChartCard>
 
@@ -286,21 +281,21 @@ const TestAnalytics = ({ data }) => {
       >
         {summary.comparableScoreChange !== null &&
         summary.comparableScoreChange !== undefined ? (
-          <div className="rounded-lg border border-border bg-muted/30 p-4">
-            <p className="text-2xl font-semibold text-foreground">
+          <div className="rounded-control border border-line bg-canvas p-4">
+            <p className="text-[25px] font-semibold text-ink">
               {summary.comparableScoreChange > 0 ? "+" : ""}
               {summary.comparableScoreChange}%
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-sm text-muted">
               Change between comparable tests
             </p>
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-border p-4">
-            <p className="text-sm font-medium text-foreground">
+          <div className="rounded-control border border-dashed border-line p-4">
+            <p className="text-sm font-medium text-ink">
               Comparison is currently unavailable
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-sm text-muted">
               {summary.comparableScoreChangeNote ||
                 "More comparable test records are needed before a score change can be calculated."}
             </p>

@@ -1,5 +1,4 @@
-
-import { CalendarDays, ChevronDown } from "lucide-react";
+import { useState } from "react";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const MAX_RANGE_DAYS = 90;
@@ -78,17 +77,19 @@ const presets = [
   { label: "Custom range", value: "custom" },
 ];
 
-export default function DateRangeSelector({
-  value,
-  onChange,
-}) {
+export default function DateRangeSelector({ value, onChange }) {
   const selectedPreset = value?.preset || "7days";
   const from = value?.from || getPresetRange("7days").from;
   const to = value?.to || getPresetRange("7days").to;
 
   const isCustom = selectedPreset === "custom";
 
+  // Message shown when a chosen custom range is refused (display only).
+  const [rangeMessage, setRangeMessage] = useState("");
+
   function handlePresetChange(preset) {
+    setRangeMessage("");
+
     if (preset === "custom") {
       onChange({
         preset: "custom",
@@ -112,16 +113,22 @@ export default function DateRangeSelector({
     const end = parseDateInput(nextRange.to);
 
     if (!start || !end) {
+      setRangeMessage("");
       onChange(nextRange);
       return;
     }
 
-    if (end < start) return;
-
-    if (getRangeDays(nextRange.from, nextRange.to) > MAX_RANGE_DAYS) {
+    if (end < start) {
+      setRangeMessage("The end date must be on or after the start date.");
       return;
     }
 
+    if (getRangeDays(nextRange.from, nextRange.to) > MAX_RANGE_DAYS) {
+      setRangeMessage(`Choose a range of ${MAX_RANGE_DAYS} days or fewer.`);
+      return;
+    }
+
+    setRangeMessage("");
     onChange(nextRange);
   }
 
@@ -133,25 +140,13 @@ export default function DateRangeSelector({
     rangeDays <= MAX_RANGE_DAYS;
 
   return (
-    <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <CalendarDays
-              size={17}
-              className="text-[var(--muted-foreground)]"
-            />
-            <h3 className="text-sm font-semibold text-[var(--foreground)]">
-              Date range
-            </h3>
-          </div>
-
-          <p className="text-xs text-[var(--muted-foreground)]">
-            Choose the period for your analytics.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
+    <section aria-label="Date range" className="card p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          role="group"
+          aria-label="Choose the period for your analytics"
+          className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap"
+        >
           {presets.map((preset) => {
             const active = selectedPreset === preset.value;
 
@@ -161,10 +156,10 @@ export default function DateRangeSelector({
                 type="button"
                 onClick={() => handlePresetChange(preset.value)}
                 aria-pressed={active}
-                className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                className={`btn border ${
                   active
-                    ? "border-[var(--foreground)] bg-[var(--foreground)] text-[var(--background)]"
-                    : "border-[var(--border)] bg-transparent text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+                    ? "border-primary bg-primary text-white"
+                    : "border-line-strong bg-surface text-ink hover:bg-tint"
                 }`}
               >
                 {preset.label}
@@ -173,13 +168,19 @@ export default function DateRangeSelector({
           })}
         </div>
 
-        {isCustom && (
+        <p className="text-sm text-muted" aria-live="polite">
+          {hasValidRange
+            ? `${rangeDays} ${rangeDays === 1 ? "day" : "days"} selected`
+            : "Select a valid date range"}
+          {isCustom && ` · up to ${MAX_RANGE_DAYS} days`}
+        </p>
+      </div>
+
+      {isCustom && (
+        <div className="mt-4 border-t border-line pt-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="analytics-from"
-                className="text-xs font-medium text-[var(--muted-foreground)]"
-              >
+            <div>
+              <label htmlFor="analytics-from" className="field-label">
                 Start date
               </label>
 
@@ -191,15 +192,12 @@ export default function DateRangeSelector({
                 onChange={(event) =>
                   handleDateChange("from", event.target.value)
                 }
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] outline-none focus:border-[var(--foreground)]"
+                className="field"
               />
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="analytics-to"
-                className="text-xs font-medium text-[var(--muted-foreground)]"
-              >
+            <div>
+              <label htmlFor="analytics-to" className="field-label">
                 End date
               </label>
 
@@ -212,26 +210,18 @@ export default function DateRangeSelector({
                 onChange={(event) =>
                   handleDateChange("to", event.target.value)
                 }
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] outline-none focus:border-[var(--foreground)]"
+                className="field"
               />
             </div>
           </div>
-        )}
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)] pt-3">
-          <p className="text-xs text-[var(--muted-foreground)]">
-            {hasValidRange
-              ? `${rangeDays} ${rangeDays === 1 ? "day" : "days"} selected`
-              : "Select a valid date range"}
-          </p>
-
-          {isCustom && (
-            <p className="text-xs text-[var(--muted-foreground)]">
-              Maximum range: 90 days
+          {rangeMessage && (
+            <p role="alert" className="mt-3 text-sm text-danger">
+              {rangeMessage}
             </p>
           )}
         </div>
-      </div>
+      )}
     </section>
   );
 }

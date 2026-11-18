@@ -1,0 +1,226 @@
+/*
+  StudyPulse landing page motion.
+  Only transform and opacity are animated, so the browser does not re-layout.
+  Everything is switched on by data-motion="ok" on .landing-root, which
+  LandingPage sets only when the visitor has NOT asked for reduced motion.
+*/
+
+.landing-root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  overflow-x: clip;
+}
+
+/* ---------- Scroll reveal (once per element) ---------- */
+.landing-root[data-motion="ok"] [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 650ms var(--ease-out) var(--reveal-delay, 0ms),
+    transform 650ms var(--ease-out) var(--reveal-delay, 0ms);
+}
+
+.landing-root[data-motion="ok"] [data-reveal][data-in="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Children of a revealed group appear one after another */
+.landing-root[data-motion="ok"] [data-reveal] [data-stagger] {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition:
+    opacity 550ms var(--ease-out),
+    transform 550ms var(--ease-out);
+  transition-delay: calc(var(--reveal-delay, 0ms) + 140ms + var(--i, 0) * 80ms);
+}
+
+.landing-root[data-motion="ok"] [data-reveal][data-in="true"] [data-stagger] {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Hero entrance on page load ---------- */
+@keyframes lp-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.landing-root[data-motion="ok"] .lp-rise {
+  animation: lp-rise 800ms var(--ease-out) both;
+  animation-delay: var(--d, 0ms);
+}
+
+/* Small tab-panel change */
+@keyframes lp-swap {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.landing-root[data-motion="ok"] .lp-swap {
+  animation: lp-swap 320ms var(--ease-out) both;
+}
+
+/* ---------- Gentle float on a few preview cards ---------- */
+@keyframes lp-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0);
+  }
+}
+
+.landing-root[data-motion="ok"] .lp-float {
+  animation: lp-float 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+.landing-root[data-motion="ok"] .lp-float-slow {
+  animation: lp-float 9s ease-in-out infinite;
+  animation-delay: -3s;
+  will-change: transform;
+}
+
+/* ---------- Ambient lines behind the hero ---------- */
+@keyframes lp-drift {
+  to {
+    transform: translate3d(48px, 0, 0);
+  }
+}
+
+.landing-root[data-motion="ok"] .lp-lines {
+  animation: lp-drift 40s linear infinite;
+}
+
+/* ---------- Chart reveals (triggered by data-in on an ancestor) ---------- */
+.landing-root[data-motion="ok"] .lp-bar {
+  transform-origin: bottom;
+  transform: scaleY(0);
+  transition: transform 800ms var(--ease-out);
+  transition-delay: calc(var(--reveal-delay, 0ms) + 200ms + var(--i, 0) * 70ms);
+}
+
+.landing-root[data-motion="ok"] [data-in="true"] .lp-bar {
+  transform: scaleY(1);
+}
+
+.landing-root[data-motion="ok"] .lp-hbar {
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 900ms var(--ease-out);
+  transition-delay: calc(var(--reveal-delay, 0ms) + 200ms + var(--i, 0) * 90ms);
+}
+
+.landing-root[data-motion="ok"] [data-in="true"] .lp-hbar {
+  transform: scaleX(1);
+}
+
+.landing-root[data-motion="ok"] .lp-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1400ms var(--ease-out) 300ms;
+}
+
+.landing-root[data-motion="ok"] [data-in="true"] .lp-line {
+  stroke-dashoffset: 0;
+}
+
+.landing-root[data-motion="ok"] .lp-dot {
+  opacity: 0;
+  transition: opacity 400ms ease;
+  transition-delay: calc(500ms + var(--i, 0) * 220ms);
+}
+
+.landing-root[data-motion="ok"] [data-in="true"] .lp-dot {
+  opacity: 1;
+}
+
+.landing-root[data-motion="ok"] .lp-cell {
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 400ms ease,
+    transform 400ms var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 7ms);
+}
+
+.landing-root[data-motion="ok"] [data-in="true"] .lp-cell {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Timeline (How it works) ---------- */
+.landing-root[data-motion="ok"] .lp-draw-x {
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 1400ms var(--ease-out) 200ms;
+}
+
+.landing-root[data-motion="ok"] .lp-draw-y {
+  transform-origin: top;
+  transform: scaleY(0);
+  transition: transform 1400ms var(--ease-out) 200ms;
+}
+
+.landing-root[data-motion="ok"] [data-in="true"] .lp-draw-x {
+  transform: scaleX(1);
+}
+
+.landing-root[data-motion="ok"] [data-in="true"] .lp-draw-y {
+  transform: scaleY(1);
+}
+
+/* ---------- Hover lift for cards (inner element, never the reveal element) ---------- */
+.lp-card {
+  transition:
+    transform 250ms var(--ease-out),
+    box-shadow 250ms var(--ease-out),
+    border-color 250ms ease;
+}
+
+@media (hover: hover) {
+  .lp-card:hover {
+    transform: translate3d(0, -3px, 0);
+    border-color: #79847e;
+    box-shadow:
+      0 1px 2px rgba(32, 37, 34, 0.05),
+      0 14px 30px -14px rgba(32, 37, 34, 0.22);
+  }
+}
+
+/* Depth for the large previews */
+.lp-shadow {
+  box-shadow:
+    0 1px 2px rgba(32, 37, 34, 0.05),
+    0 24px 60px -24px rgba(32, 37, 34, 0.28);
+}
+
+.lp-shadow-sm {
+  box-shadow:
+    0 1px 2px rgba(32, 37, 34, 0.05),
+    0 10px 28px -12px rgba(32, 37, 34, 0.25);
+}
+
+/* Faint vertical lines used as a quiet background texture */
+.lp-lines-bg {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(66, 107, 87, 0.07) 0,
+    rgba(66, 107, 87, 0.07) 1px,
+    transparent 1px,
+    transparent 48px
+  );
+}
